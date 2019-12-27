@@ -1,0 +1,72 @@
+version: '3.7'
+services:
+  mapnik:
+    image: tms/mapnik:1
+    build:
+      context: .
+      dockerfile: mapnik/Dockerfile
+    networks:
+      - tms-net
+    depends_on:
+      - db
+    volumes:
+      - type: bind
+        source: ./exchange
+        target: /input
+    ports:
+      - "5000:5000"
+    environment:
+      - DBNAME=osm
+      - PGHOST=db
+      - PGPORT=5432
+      - PGUSER=tms
+  import:
+    image: tms/osm2pgsql:1
+    build:
+      context: .
+      dockerfile: import/Dockerfile
+    networks:
+      - tms-net
+    depends_on:
+      - db
+    volumes:
+      - type: bind
+        source: ./exchange
+        target: /input
+    environment:
+      - DBNAME=osm
+      - PGHOST=db
+      - PGPORT=5432
+      - PGUSER=tms
+  style:
+    image: tms/style:1
+    build:
+      context: .
+      dockerfile: style/Dockerfile
+    volumes:
+      - type: bind
+        source: ./exchange
+        target: /output
+    environment:
+      - STYLE=de
+      - DBNAME=osm
+      - PGHOST=db
+      - PGPORT=5432
+      - PGUSER=tms
+  db:
+    image: tms/db:1
+    build:
+      context: .
+      dockerfile: db/Dockerfile
+    networks:
+      - tms-net
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      - PG_WORK_MEM
+      - PG_MAINTENANCE_WORK_MEM
+
+networks:
+  tms-net:
+    name: "tms-net"
+    driver:  bridge

@@ -1,0 +1,53 @@
+FROM debian:buster-slim
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    libboost-system1.67.0 \
+    libboost-filesystem1.67.0 \
+    libpq5 \
+    zlib1g \
+    libexpat1 \
+    libbz2-1.0 \
+    libproj13 \
+    liblua5.2 \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN set -ex \
+    && buildDeps=' \
+    git \
+    make \
+    cmake \
+    g++ \
+    libboost-dev \
+    libboost-system-dev \
+    libboost-filesystem-dev \
+    libexpat1-dev \
+    zlib1g-dev \
+    libbz2-dev \
+    libpq-dev \
+    libproj-dev \
+    lua5.2 \
+    liblua5.2-dev' \
+    && apt-get update \
+    && apt-get install -y $buildDeps --no-install-recommends \
+    && mkdir -p /build \
+    && cd /build \
+    && git clone git://github.com/openstreetmap/osm2pgsql.git \
+    && mkdir -p /build/osm2pgsql/build \
+    && cd /build/osm2pgsql/build \
+    && cmake .. \
+    && make \
+    && make install \
+    && rm -rf /build \
+    && apt-get purge -y --auto-remove $buildDeps \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY scripts/docker-entrypoint.sh /usr/local/bin/
+
+RUN mkdir -p /input
+VOLUME ["/input"]
+
+ENTRYPOINT ["sh", "/usr/local/bin/docker-entrypoint.sh"]
+
+CMD ["osm2pgsql"]
