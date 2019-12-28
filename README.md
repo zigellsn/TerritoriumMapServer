@@ -1,4 +1,4 @@
-# TerritoriumMakeStyle
+# TerritoriumMapRenderer
 
 Run Style-Container with
 ``` bash
