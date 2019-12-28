@@ -16,11 +16,11 @@ VOLUME ["/input"]
 WORKDIR $HOME/app
 USER $NODE_USER
 
-COPY ../package.json ./
+COPY package.json ./
 
 RUN npm install
 
-COPY .. .
+COPY . .
 EXPOSE 5000
 
 CMD [ "node", "./bin/www" ]

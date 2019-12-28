@@ -1,0 +1,12 @@
+{
+  "name": "territoriumcartostyle",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node makestyle.js"
+  },
+  "dependencies": {
+    "js-yaml": "3.13.1",
+    "carto": "1.2.0"
+  }
+}

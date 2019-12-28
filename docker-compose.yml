@@ -3,8 +3,8 @@ services:
   mapnik:
     image: tms/mapnik:1
     build:
-      context: .
-      dockerfile: mapnik/Dockerfile
+      context: mapnik/
+      dockerfile: Dockerfile
     networks:
       - tms-net
     depends_on:
@@ -23,8 +23,8 @@ services:
   import:
     image: tms/osm2pgsql:1
     build:
-      context: .
-      dockerfile: import/Dockerfile
+      context: import/
+      dockerfile: Dockerfile
     networks:
       - tms-net
     depends_on:
@@ -38,11 +38,12 @@ services:
       - PGHOST=db
       - PGPORT=5432
       - PGUSER=tms
+      # - OSM2PGSQL_DATAFILE=...
   style:
     image: tms/style:1
     build:
-      context: .
-      dockerfile: style/Dockerfile
+      context: style/
+      dockerfile: Dockerfile
     volumes:
       - type: bind
         source: ./exchange
@@ -56,8 +57,8 @@ services:
   db:
     image: tms/db:1
     build:
-      context: .
-      dockerfile: db/Dockerfile
+      context: db/
+      dockerfile: Dockerfile
     networks:
       - tms-net
     ports:

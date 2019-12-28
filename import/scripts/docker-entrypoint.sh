@@ -29,26 +29,43 @@ EOF
     chmod a+rw .env
     export OSM2PGSQL_CACHE="${OSM2PGSQL_CACHE:-512}"
     export OSM2PGSQL_NUMPROC="${OSM2PGSQL_NUMPROC:-1}"
-    export OSM2PGSQL_DATAFILE="/output/${OSM2PGSQL_DATAFILE:-data.osm.pbf}"
+    export OSM2PGSQL_DATAFILE="/input/${OSM2PGSQL_DATAFILE:-data.osm.pbf}"
   fi
 
-osm2pgsql -v \
-  "${OSMHOST}" \
-  "${OSMPORT}" \
-  "${OSMUSER}" \
-  --cache "${OSM2PGSQL_CACHE}" \
-  --number-processes "${OSM2PGSQL_NUMPROC}" \
-  --hstore \
-  --multi-geometry \
-  --database "${DBNAME}" \
-  --slim \
-  --drop \
-  --style /output/openstreetmap-carto.style \
-  --tag-transform-script /output/openstreetmap-carto.lua \
-  "${OSM2PGSQL_DATAFILE}"
+if [ "${STYLE:-de}" = 'de' ]; then
+  psql -U postgres -d "${DBNAME}" -c 'CREATE EXTENSION IF NOT EXISTS osml10n CASCADE;'
+fi
 
-# psql -d "${DBNAME}" -c "DELETE FROM planet_osm_ways AS w WHERE 0 = (SELECT COUNT(1) FROM planet_osm_nodes AS n WHERE n.id = ANY(w.nodes));"
-# psql -d "${DBNAME}" -c "DELETE FROM planet_osm_rels AS r WHERE 0 = (SELECT COUNT(1) FROM planet_osm_nodes AS n WHERE n.id = ANY(r.parts)) AND 0 = (SELECT COUNT(1) FROM planet_osm_ways AS w WHERE w.id = ANY(r.parts));"
-# psql -d "${DBNAME}" -c "REINDEX TABLE planet_osm_ways;"
-# psql -d "${DBNAME}" -c "REINDEX TABLE planet_osm_rels;"
-# psql -d "${DBNAME}" -c "VACUUM FULL;"
+if [ "${STYLE:-de}" = 'de' ]; then
+  osm2pgsql -v \
+    "${OSMHOST}" \
+    "${OSMPORT}" \
+    "${OSMUSER}" \
+    --cache "${OSM2PGSQL_CACHE}" \
+    --number-processes "${OSM2PGSQL_NUMPROC}" \
+    --hstore \
+    --multi-geometry \
+    --database "${DBNAME}" \
+    --slim \
+    --drop \
+    --style /input/hstore-only.style \
+    --prefix planet_osm_hstore \
+    --tag-transform-script /input/openstreetmap-carto.lua \
+    "${OSM2PGSQL_DATAFILE}"
+  /input/views_osmde/apply-views.sh "${DBNAME}" "${STYLE:-de}"
+else
+  osm2pgsql -v \
+    "${OSMHOST}" \
+    "${OSMPORT}" \
+    "${OSMUSER}" \
+    --cache "${OSM2PGSQL_CACHE}" \
+    --number-processes "${OSM2PGSQL_NUMPROC}" \
+    --hstore \
+    --multi-geometry \
+    --database "${DBNAME}" \
+    --slim \
+    --drop \
+    --style /input/openstreetmap-carto.style \
+    --tag-transform-script /input/openstreetmap-carto.lua \
+    "${OSM2PGSQL_DATAFILE}"
+fi
