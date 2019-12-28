@@ -23,7 +23,6 @@ fi
 psql -U postgres -c "SELECT 1 FROM pg_database WHERE datname = '${DBNAME}';" | grep -q 1 || createdb -U postgres -E UTF8 -O "${PGUSER}" "${DBNAME}" &&
   psql -U postgres -d "${DBNAME}" -c 'CREATE EXTENSION IF NOT EXISTS postgis;' &&
   psql -U postgres -d "${DBNAME}" -c 'CREATE EXTENSION IF NOT EXISTS hstore;' &&
-  psql -U postgres -d "${DBNAME}" -c 'CREATE EXTENSION IF NOT EXISTS osml10n CASCADE;' &&
   if [ ! -e ".env" ]; then
     cat >.env <<EOF
 PG_WORK_MEM="${PG_WORK_MEM:-16MB}"
