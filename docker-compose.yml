@@ -77,6 +77,10 @@ services:
       - tms-net
     ports:
       - "127.0.0.1:5432:5432"
+    volumes:
+      - type: bind
+        source: ./data
+        target: /var/lib/postgresql/data
     environment:
       - PG_WORK_MEM
       - PG_MAINTENANCE_WORK_MEM
