@@ -13,11 +13,17 @@ if [ -n "${PGUSER}" ]; then
 fi
 
 if [ -n "${PGUSER}" ]; then
-  psql -U postgres -c "SELECT 1 FROM pg_roles WHERE rolname='${PGUSER}'" | grep -q 1 || psql -U postgres -c "CREATE ROLE ${PGUSER} WITH LOGIN PASSWORD '${PGPASSWORD}'"
+  psql -U postgres -c "SELECT 1 FROM pg_roles WHERE rolname='${PGUSER}'" | grep -q 1 ||
+    if [ -n "${PGPASSWORD}" ]; then
+      psql -U postgres -c "CREATE ROLE ${PGUSER} WITH LOGIN PASSWORD '${PGPASSWORD}'"
+    else
+      psql -U postgres -c "CREATE ROLE ${PGUSER} WITH LOGIN"
+    fi
 fi
 psql -U postgres -c "SELECT 1 FROM pg_database WHERE datname = '${DBNAME}';" | grep -q 1 || createdb -U postgres -E UTF8 -O "${PGUSER}" "${DBNAME}" &&
   psql -U postgres -d "${DBNAME}" -c 'CREATE EXTENSION IF NOT EXISTS postgis;' &&
   psql -U postgres -d "${DBNAME}" -c 'CREATE EXTENSION IF NOT EXISTS hstore;' &&
+  psql -U postgres -d "${DBNAME}" -c 'CREATE EXTENSION IF NOT EXISTS osml10n CASCADE;' &&
   if [ ! -e ".env" ]; then
     cat >.env <<EOF
 PG_WORK_MEM="${PG_WORK_MEM:-16MB}"

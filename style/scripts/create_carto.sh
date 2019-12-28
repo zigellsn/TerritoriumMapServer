@@ -19,4 +19,5 @@ else
 fi
 cp -f ./osm-carto/openstreetmap-carto.* /output/
 cp -rf ./osm-carto/symbols /output/
+cp -f ./osm-carto/scripts/get-shapefiles.py /output/
 echo "Finished."
