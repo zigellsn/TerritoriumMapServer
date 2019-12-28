@@ -6,7 +6,11 @@ let router = express.Router();
 router.get('/', function (req, res, next) {
     let renderer = new Renderer();
     try {
-        renderer.worldfile(0, 0, 1, 1, 0, 0, 256, 256);
+        renderer.worldfile(9.15, 48.7, 9.16, 48.8, 0, 0, 256, 256, function (file) {
+            console.log(file);
+        });
+        renderer.map(9.15, 48.7, 9.16, 48.8, 0, 0, 256, 256, 'png', function (file) {
+        });
     } catch (e) {
         console.log(e);
     }
