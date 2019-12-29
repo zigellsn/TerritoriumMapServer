@@ -4,6 +4,7 @@
 - [Docker](https://www.docker.com/)
 - [Docker Compose](https://github.com/docker/compose)
 - unzip
+- wget or curl or ...
 
 ## Workflow
 ``` bash
@@ -13,7 +14,9 @@ docker-compose build
 docker-compose run db
 ```
 
-Adjust and copy project.mml to ./exchange
+Copy project.mml from [openstreetmap-carto](https://github.com/gravitystorm/openstreetmap-carto) or 
+[openstreetmap-carto-de](https://github.com/giggls/openstreetmap-carto-de) to ./exchange and
+adjust if necessary.
 
 ``` bash
 docker-compose run style
