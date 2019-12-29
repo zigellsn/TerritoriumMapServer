@@ -1,4 +1,4 @@
-# TerritoriumMapRenderer
+# TerritoriumMapServer
 
 ## Requirements
 - [Docker](https://www.docker.com/)
