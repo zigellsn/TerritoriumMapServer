@@ -15,13 +15,6 @@ router.get('/territorium/map', function (req, res, next) {
         res.status(404).send('Missing parameter(s)');
         return;
     }
-    let xrot = 0;
-    if (req.query.xrotation !== undefined)
-        xrot = req.query.xrotation;
-
-    let yrot = 0;
-    if (req.query.yrotation !== undefined)
-        yrot = req.query.yrotation;
 
     let imgtype = 'png';
     if (req.query.type !== undefined)
@@ -29,7 +22,7 @@ router.get('/territorium/map', function (req, res, next) {
 
     try {
         let renderer = new Renderer();
-        let buffer = renderer.map(req.query.long0, req.query.lat0, req.query.long1, req.query.lat1, xrot, yrot, req.query.width, req.query.height, imgtype);
+        let buffer = renderer.map(req.query.long0, req.query.lat0, req.query.long1, req.query.lat1, req.query.width, req.query.height, imgtype);
         if (imgtype === 'svg')
             res.type('image/svg+xml');
         else
@@ -55,17 +48,10 @@ router.get('/territorium/worldfile', function (req, res, next) {
         res.status(404).send('Missing parameter(s)');
         return;
     }
-    let xrot = 0;
-    if (req.query.xrotation !== undefined)
-        xrot = req.query.xrotation;
-
-    let yrot = 0;
-    if (req.query.yrotation !== undefined)
-        yrot = req.query.yrotation;
 
     try {
         let renderer = new Renderer();
-        let buffer = renderer.worldfile(req.query.long0, req.query.lat0, req.query.long1, req.query.lat1, xrot, yrot, req.query.width, req.query.height);
+        let buffer = renderer.worldfile(req.query.long0, req.query.lat0, req.query.long1, req.query.lat1, req.query.width, req.query.height);
         res.type('text/plain');
         res.set({
             'Content-Length': buffer.length,
