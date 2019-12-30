@@ -1,13 +1,16 @@
 'use strict';
 
 const mapnik = require('mapnik');
+const uuidv4 = require('uuid/v4');
+const fs = require('fs');
+const srs = '+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over';
 
 function Renderer() {
 }
 
 function prepareRenderer(long0, lat0, long1, lat1, imgx, imgy, callback) {
 
-    let merc = new mapnik.Projection('+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over');
+    let merc = new mapnik.Projection(srs);
 
     mapnik.register_system_fonts();
     mapnik.register_default_input_plugins();
@@ -23,7 +26,7 @@ function prepareRenderer(long0, lat0, long1, lat1, imgx, imgy, callback) {
 
 function prepareRendererSync(long0, lat0, long1, lat1, imgx, imgy) {
 
-    let merc = new mapnik.Projection('+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over');
+    let merc = new mapnik.Projection(srs);
 
     mapnik.register_system_fonts();
     mapnik.register_default_input_plugins();
@@ -36,7 +39,7 @@ function prepareRendererSync(long0, lat0, long1, lat1, imgx, imgy) {
     return map;
 }
 
-Renderer.prototype.map = function (long0, lat0, long1, lat1, width, height, imgtype, callback) {
+Renderer.prototype.map = function (long0, lat0, long1, lat1, width, height, imgtype) {
 
     let z = 1;
     let imgx = width * z;
@@ -45,10 +48,15 @@ Renderer.prototype.map = function (long0, lat0, long1, lat1, width, height, imgt
     try {
         let m = prepareRendererSync(long0, lat0, long1, lat1, imgx, imgy);
         if (imgtype === 'svg') {
-            let surface = cairo.SVGSurface(response, m.width, m.height);
-            m.render(surface);
-            surface.finish();
-            return surface;
+            if (!mapnik.supports.cairo) {
+                console.log('So sad... No Cairo');
+                return undefined;
+            }
+            let filename = uuidv4();
+            m.renderFileSync(filename, {format: imgtype});
+            let buffer = fs.readFileSync(filename);
+            fs.unlinkSync(filename);
+            return buffer;
         } else {
             return m.renderSync({format: imgtype});
         }

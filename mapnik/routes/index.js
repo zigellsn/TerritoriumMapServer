@@ -23,6 +23,10 @@ router.get('/territorium/map', function (req, res, next) {
     try {
         let renderer = new Renderer();
         let buffer = renderer.map(req.query.long0, req.query.lat0, req.query.long1, req.query.lat1, req.query.width, req.query.height, imgtype);
+        if (buffer === undefined) {
+            res.status(404).send('Render error');
+            return;
+        }
         if (imgtype === 'svg')
             res.type('image/svg+xml');
         else
@@ -34,6 +38,7 @@ router.get('/territorium/map', function (req, res, next) {
             'Cache-Control': 'Public'
         });
         res.send(buffer);
+        return;
     } catch (e) {
         console.log(e);
     }
