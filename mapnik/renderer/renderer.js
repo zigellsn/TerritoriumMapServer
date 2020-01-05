@@ -3,7 +3,9 @@
 const mapnik = require('mapnik');
 const uuidv4 = require('uuid/v4');
 const fs = require('fs');
+const {createCanvas, Image} = require('canvas');
 const srs = '+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over';
+const copyright = '© OpenStreetMap contributors';
 
 function Renderer() {
 }
@@ -39,7 +41,27 @@ function prepareRendererSync(long0, lat0, long1, lat1, imgx, imgy) {
     return map;
 }
 
-Renderer.prototype.map = function (long0, lat0, long1, lat1, width, height, imgtype) {
+function addCopyrightTextRaster(src, width, height) {
+    const canvas = createCanvas(width, height, 'PNG');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.onload = () => ctx.drawImage(img, 0, 0);
+    img.onerror = err => {
+        throw err
+    };
+    img.src = src;
+    ctx.font = '10px DejaVu Sans Book';
+    let text = ctx.measureText(copyright);
+    ctx.fillText(copyright, 10, height - text.emHeightAscent - 10);
+    return canvas.toBuffer();
+}
+
+function addCopyrightTextVector(src, width, height) {
+    let len = src.length;
+    return `${src.slice(0, len - 7)}<text fill="#0" font-size="10" font-family="sans-serif" x="10" y="${height - 32}"><tspan dy="18.2" x="10">${copyright}</tspan></text>${src.slice(len - 7, len)}`;
+}
+
+Renderer.prototype.mapLegacy = function (long0, lat0, long1, lat1, width, height, imgtype) {
 
     let z = 1;
     let imgx = width * z;
@@ -47,19 +69,22 @@ Renderer.prototype.map = function (long0, lat0, long1, lat1, width, height, imgt
 
     try {
         let m = prepareRendererSync(long0, lat0, long1, lat1, imgx, imgy);
+        let src;
         if (imgtype === 'svg') {
             if (!mapnik.supports.cairo) {
-                console.log('So sad... No Cairo');
+                console.log('So sad... no Cairo');
                 return undefined;
             }
             let filename = uuidv4();
             m.renderFileSync(filename, {format: imgtype});
-            let buffer = fs.readFileSync(filename);
+            src = fs.readFileSync(filename);
             fs.unlinkSync(filename);
-            return buffer;
+            src = addCopyrightTextVector(src, m.width, m.height);
         } else {
-            return m.renderSync({format: imgtype});
+            src = m.renderSync({format: imgtype});
+            src = addCopyrightTextRaster(src, m.width, m.height);
         }
+        return src;
     } catch (e) {
         console.log(e);
     }

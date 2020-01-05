@@ -22,7 +22,7 @@ router.get('/territorium/map', function (req, res, next) {
 
     try {
         let renderer = new Renderer();
-        let buffer = renderer.map(req.query.long0, req.query.lat0, req.query.long1, req.query.lat1, req.query.width, req.query.height, imgtype);
+        let buffer = renderer.mapLegacy(req.query.long0, req.query.lat0, req.query.long1, req.query.lat1, req.query.width, req.query.height, imgtype);
         if (buffer === undefined) {
             res.status(404).send('Render error');
             return;
@@ -60,7 +60,7 @@ router.get('/territorium/worldfile', function (req, res, next) {
         res.type('text/plain');
         res.set({
             'Content-Length': buffer.length,
-            'Content-Disposition': `attachment; filename=map.pwg`,
+            'Content-Disposition': `attachment; filename=map.pgw`,
             'Content-Transfer-Encoding': 'Binary',
             'Cache-Control': 'Public'
         });
