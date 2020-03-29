@@ -10,6 +10,7 @@ const copyright = '© OpenStreetMap contributors';
 const merc = new mapnik.Projection(srs);
 
 function Renderer() {
+    console.log(mapnik.versions);
     mapnik.register_system_fonts();
     mapnik.register_default_input_plugins();
 }
@@ -57,7 +58,7 @@ Renderer.prototype.map = function (polygon /*, size, bbox, way, mimeType, layers
 
     function createLayers(polygon) {
         let layers = [];
-        if (!polygon.hasOwnProperty('way') && polygon['way'] !== undefined)
+        if (polygon.hasOwnProperty('way') && polygon['way'] !== undefined)
             layers.push({way: polygon['way'], name: polygon['name'], styleName: polygon['style']['name']});
         if (polygon.hasOwnProperty('subpolygon')) {
             let subPolygons = polygon['subpolygon'];
@@ -94,7 +95,7 @@ Renderer.prototype.map = function (polygon /*, size, bbox, way, mimeType, layers
             if (layer['name'].hasOwnProperty('position'))
                 nameString += `"${layer['name']['text']}",${layer['name']['position'][0]},${layer['name']['position'][1]}\n`;
             else
-                //TODO: PointInSurface for name position
+                //TODO: PointOnSurface for name position
                 nameString += `"${layer['name']['text']}",,\n`;
         }
         return nameString;
@@ -124,24 +125,22 @@ Renderer.prototype.map = function (polygon /*, size, bbox, way, mimeType, layers
         //TODO: Merge layers with the same style
         for (const l of layers) {
             let ds = new mapnik.Datasource({
-                'type': 'geojson',
-                'inline': JSON.stringify(l['way'])
+                type: 'geojson',
+                inline: JSON.stringify(l['way'])
             });
-            let layer = new mapnik.Layer(`border${i}`);
+            let layer = new mapnik.Layer(`border${i}`, srs);
             layer.datasource = ds;
-            layer.srs = srs;
             layer.styles = [l['styleName']];
             m.add_layer(layer);
             i++;
         }
 
         let ds_names = new mapnik.Datasource({
-            'type': 'csv',
-            'inline': inline
+            type: 'csv',
+            inline: inline
         });
-        let layer = new mapnik.Layer('names');
+        let layer = new mapnik.Layer('names', srs);
         layer.datasource = ds_names;
-        layer.srs = srs;
         layer.styles = ['names_style'];
         m.add_layer(layer);
     }
