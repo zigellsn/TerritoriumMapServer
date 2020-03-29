@@ -26,12 +26,12 @@ router.post('/territorium', requireJsonContent(), (req, res, next) => {
             message: 'Empty request body',
         });
     }
-    let buffer = renderer.map(req.body.polygon.size, req.body.polygon.bbox, req.body.polygon.way, req.body.polygon.mimeType, [req.body.polygon.style], [req.body.polygon.name]);
+    let buffer = renderer.map(req.body['polygon']);
     if (buffer === undefined) {
         res.status(404).send('Render error');
         return;
     }
-    res.type(req.body.polygon.mimeType);
+    res.type(req.body['polygon'].mimeType);
     res.set({
         'Content-Length': buffer.length,
         'Content-Disposition': `attachment; filename=map.png`,

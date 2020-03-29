@@ -53,20 +53,52 @@ function addCopyrightTextVector(src, width, height) {
     return `${src.slice(0, len - 7)}<text fill="#0" font-size="10" font-family="sans-serif" x="10" y="${height - 32}"><tspan dy="18.2" x="10">${copyright}</tspan></text>${src.slice(len - 7, len)}`;
 }
 
-Renderer.prototype.map = function (size, bbox, way, mimeType, styles, names) {
-    function getInline(names) {
+Renderer.prototype.map = function (polygon /*, size, bbox, way, mimeType, layers, names*/) {
+
+    function createLayers(polygon) {
+        let layers = [];
+        layers.push({way: polygon['way'], name: polygon['name'], styleName: polygon['style']['name']});
+        let subPolygons = polygon['subpolygon'];
+        for (const layer of subPolygons) {
+            layers.push({way: layer['way'], name: layer['name'], styleName: layer['style']['name']});
+        }
+        return layers;
+    }
+
+    function createUniqueStyles(polygon) {
+        let styles = [];
+        styles.push(polygon.style);
+        let subPolygons = polygon['subpolygon'];
+        for (const layer of subPolygons) {
+            styles.push(layer.style)
+        }
+        return getUnique(styles, 'name');
+    }
+
+    function getUnique(arr, comp) {
+        return arr
+            .map(e => e[comp])
+            .map((e, i, final) => final.indexOf(e) === i && i)
+            .filter(e => arr[e]).map(e => arr[e]);
+    }
+
+    function getInline(layers) {
         let nameString = 'name,x,y\n';
-        for (let i = 0; i < names.length; i++) {
-            nameString += `"${names[i].text}",${names[i].position[0]},${names[i].position[1]}\n`
+        for (const layer of layers) {
+            if(layer['name'].hasOwnProperty('position'))
+                nameString += `"${layer['name']['text']}",${layer['name']['position'][0]},${layer['name']['position'][1]}\n`;
+            else
+                //TODO: PointInSurface for name position
+                nameString += `"${layer['name']['text']}",,\n`;
         }
         return nameString;
     }
 
-    function createStyles(styles) {
+    function createStyles(layers) {
         let s = '<Map>';
-        for (let i = 0; i < styles.length; i++) {
-            s += `<Style name="${styles[i].name}">`;
-            s += ` <Rule><LineSymbolizer stroke="${styles[i].color}" stroke-width="${styles[i].width}" stroke-opacity="${styles[i].opacity}"/></Rule>`;
+        for (const layer of layers) {
+            s += `<Style name="${layer.name}">`;
+            s += ` <Rule><LineSymbolizer stroke="${layer.color}" stroke-width="${layer.width}" stroke-opacity="${layer.opacity}"/></Rule>`;
             s += '</Style>';
         }
         s += '<Style name="names_style">';
@@ -78,24 +110,30 @@ Renderer.prototype.map = function (size, bbox, way, mimeType, styles, names) {
         return s;
     }
 
-    function addAdditionalLayers(m, way, styles, names) {
-        let s = createStyles(styles);
-        m.fromStringSync(s);
-        let ds = new mapnik.Datasource({
-            'type': 'geojson',
-            'inline': way
-        });
+    function addAdditionalLayers(m, layers, styles, inline) {
+
+        m.fromStringSync(styles);
+
+        let i = 0;
+        //TODO: Merge layers with the same style
+        for (const l of layers) {
+            let ds = new mapnik.Datasource({
+                'type': 'geojson',
+                'inline': JSON.stringify(l['way'])
+            });
+            let layer = new mapnik.Layer(`border${i}`);
+            layer.datasource = ds;
+            layer.srs = srs;
+            layer.styles = [l['styleName']];
+            m.add_layer(layer);
+            i++;
+        }
+
         let ds_names = new mapnik.Datasource({
             'type': 'csv',
-            'inline': getInline(names)
+            'inline': inline
         });
-        let layer = new mapnik.Layer('border');
-        layer.datasource = ds;
-        layer.srs = srs;
-        layer.styles = [styles[0].name];
-        m.add_layer(layer);
-
-        layer = new mapnik.Layer('names');
+        let layer = new mapnik.Layer('names');
         layer.datasource = ds_names;
         layer.srs = srs;
         layer.styles = ['names_style'];
@@ -103,13 +141,17 @@ Renderer.prototype.map = function (size, bbox, way, mimeType, styles, names) {
     }
 
     try {
-        let m = new mapnik.Map(size[0], size[1]);
-        m.loadSync('/input/osm-de.xml');
-        m.zoomToBox(bbox);
+        let layers = createLayers(polygon);
+        let uniqueStyles = createUniqueStyles(polygon);
+        let styles = createStyles(uniqueStyles);
+        let inline = getInline(layers);
 
-        addAdditionalLayers(m, JSON.stringify(way), styles, names);
+        let m = new mapnik.Map(polygon['size'][0], polygon['size'][1]);
+        m.loadSync('/input/osm-de.xml');
+        m.zoomToBox(polygon['bbox']);
+        addAdditionalLayers(m, layers, styles, inline);
         let src;
-        if (mimeType === 'image/xml+svg') {
+        if (polygon['mimeType'] === 'image/xml+svg') {
             if (!mapnik.supports.cairo) {
                 console.log('So sad... no Cairo');
                 return undefined;
@@ -127,7 +169,6 @@ Renderer.prototype.map = function (size, bbox, way, mimeType, styles, names) {
     } catch (e) {
         console.log(e);
     }
-
 };
 
 Renderer.prototype.mapLegacy = function (long0, lat0, long1, lat1, width, height, imgtype) {

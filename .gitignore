@@ -229,3 +229,4 @@ $RECYCLE.BIN/
 
 exchange/
 data/
+*.rest
