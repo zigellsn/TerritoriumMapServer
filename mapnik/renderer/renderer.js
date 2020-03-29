@@ -57,10 +57,14 @@ Renderer.prototype.map = function (polygon /*, size, bbox, way, mimeType, layers
 
     function createLayers(polygon) {
         let layers = [];
-        layers.push({way: polygon['way'], name: polygon['name'], styleName: polygon['style']['name']});
-        let subPolygons = polygon['subpolygon'];
-        for (const layer of subPolygons) {
-            layers.push({way: layer['way'], name: layer['name'], styleName: layer['style']['name']});
+        if (!polygon.hasOwnProperty('way') && polygon['way'] !== undefined)
+            layers.push({way: polygon['way'], name: polygon['name'], styleName: polygon['style']['name']});
+        if (polygon.hasOwnProperty('subpolygon')) {
+            let subPolygons = polygon['subpolygon'];
+            for (const layer of subPolygons) {
+                if (!layer.hasOwnProperty('way') && layer['way'] !== undefined)
+                    layers.push({way: layer['way'], name: layer['name'], styleName: layer['style']['name']});
+            }
         }
         return layers;
     }
@@ -68,9 +72,11 @@ Renderer.prototype.map = function (polygon /*, size, bbox, way, mimeType, layers
     function createUniqueStyles(polygon) {
         let styles = [];
         styles.push(polygon.style);
-        let subPolygons = polygon['subpolygon'];
-        for (const layer of subPolygons) {
-            styles.push(layer.style)
+        if (polygon.hasOwnProperty('subpolygon')) {
+            let subPolygons = polygon['subpolygon'];
+            for (const layer of subPolygons) {
+                styles.push(layer.style)
+            }
         }
         return getUnique(styles, 'name');
     }
@@ -85,7 +91,7 @@ Renderer.prototype.map = function (polygon /*, size, bbox, way, mimeType, layers
     function getInline(layers) {
         let nameString = 'name,x,y\n';
         for (const layer of layers) {
-            if(layer['name'].hasOwnProperty('position'))
+            if (layer['name'].hasOwnProperty('position'))
                 nameString += `"${layer['name']['text']}",${layer['name']['position'][0]},${layer['name']['position'][1]}\n`;
             else
                 //TODO: PointInSurface for name position
