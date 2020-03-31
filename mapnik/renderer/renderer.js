@@ -106,7 +106,7 @@ Renderer.prototype.map = function (polygon /*, size, bbox, way, mimeType, layers
         for (const layer of layers) {
             if (!layer.hasOwnProperty('name'))
                 continue;
-            if (layer['name'].hasOwnProperty('position'))
+            if (layer['name'].hasOwnProperty('position') && layer['name'].hasOwnProperty('text'))
                 nameString += `"${layer['name']['text']}",${layer['name']['position'][0]},${layer['name']['position'][1]}\n`;
             else
                 //TODO: PointOnSurface for name position
@@ -117,14 +117,20 @@ Renderer.prototype.map = function (polygon /*, size, bbox, way, mimeType, layers
 
     function createStyles(layers) {
         let s = '<Map>';
+        let textSize = 0;
         for (const layer of layers) {
             s += `<Style name="${layer.name}">`;
             s += ` <Rule><LineSymbolizer stroke="${layer.color}" stroke-width="${layer.width}" stroke-opacity="${layer.opacity}"/></Rule>`;
             s += '</Style>';
+            if (layer.hasOwnProperty('size')) {
+                textSize = layer['size'];
+            }
         }
+        if (textSize === 0)
+            textSize = 12;
         s += '<Style name="names_style">';
         s += ' <Rule>';
-        s += '  <TextSymbolizer face-name="DejaVu Sans Book" size="30" fill="white" halo-fill="black" halo-radius="2" >[name]</TextSymbolizer>';
+        s += `  <TextSymbolizer face-name="DejaVu Sans Book" size="${textSize}" fill="white" halo-fill="black" halo-radius="2" horizontal-alignment="middle">[name]</TextSymbolizer>`;
         s += ' </Rule>';
         s += '</Style>';
         s += '</Map>';
