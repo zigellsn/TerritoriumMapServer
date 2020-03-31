@@ -58,13 +58,23 @@ Renderer.prototype.map = function (polygon /*, size, bbox, way, mimeType, layers
 
     function createLayers(polygon) {
         let layers = [];
-        if (polygon.hasOwnProperty('way') && polygon['way'] !== undefined)
-            layers.push({way: polygon['way'], name: polygon['name'], styleName: polygon['style']['name']});
+        let globalStyle = '';
+        if (polygon.hasOwnProperty('way') && polygon['way'] !== undefined) {
+            if (polygon.hasOwnProperty('style') && polygon['style'] !== undefined) {
+                globalStyle = polygon['style']['name'];
+            }
+            layers.push({way: polygon['way'], name: polygon['name'], styleName: globalStyle});
+        }
         if (polygon.hasOwnProperty('subpolygon')) {
             let subPolygons = polygon['subpolygon'];
             for (const layer of subPolygons) {
-                if (!layer.hasOwnProperty('way') && layer['way'] !== undefined)
-                    layers.push({way: layer['way'], name: layer['name'], styleName: layer['style']['name']});
+                if (layer.hasOwnProperty('way') && layer['way'] !== undefined) {
+                    let style = globalStyle;
+                    if (polygon.hasOwnProperty('style') && polygon['style'] !== undefined) {
+                        style = polygon['style']['name'];
+                    }
+                    layers.push({way: layer['way'], name: layer['name'], styleName: style});
+                }
             }
         }
         return layers;
@@ -92,6 +102,8 @@ Renderer.prototype.map = function (polygon /*, size, bbox, way, mimeType, layers
     function getInline(layers) {
         let nameString = 'name,x,y\n';
         for (const layer of layers) {
+            if (!layer.hasOwnProperty('name'))
+                continue;
             if (layer['name'].hasOwnProperty('position'))
                 nameString += `"${layer['name']['text']}",${layer['name']['position'][0]},${layer['name']['position'][1]}\n`;
             else
