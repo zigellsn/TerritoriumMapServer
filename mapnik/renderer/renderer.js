@@ -82,7 +82,8 @@ Renderer.prototype.map = function (polygon /*, size, bbox, way, mimeType, layers
 
     function createUniqueStyles(polygon) {
         let styles = [];
-        styles.push(polygon['style']);
+        if (polygon.hasOwnProperty('style'))
+            styles.push(polygon['style']);
         if (polygon.hasOwnProperty('subpolygon')) {
             let subPolygons = polygon['subpolygon'];
             for (const layer of subPolygons) {
