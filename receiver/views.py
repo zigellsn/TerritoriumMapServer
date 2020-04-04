@@ -11,12 +11,15 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-
+import base64
+import binascii
 import logging
+from urllib.parse import unquote_plus
 
 import pika
 from decouple import config
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.views import LoginView
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -28,11 +31,10 @@ logger = logging.getLogger("django.request")
 @method_decorator(csrf_exempt, name="dispatch")
 class ReceiverView(LoginRequiredMixin, View):
 
-    @staticmethod
-    def post(request, *args, **kwargs):
-        event = request.META.get("HTTP_X_TERRITORIUM")
+    def post(self, request, *args, **kwargs):
+        request_type = request.META.get("HTTP_X_TERRITORIUM")
 
-        if event == "map_rendering":
+        if request_type == "map_rendering":
             connection = pika.BlockingConnection(
                 pika.ConnectionParameters(config("RABBITMQ_HOST", default="localhost")))
             channel = connection.channel()

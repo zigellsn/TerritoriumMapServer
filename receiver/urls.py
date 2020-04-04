@@ -12,11 +12,12 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from django.contrib import admin
-from django.urls import path, include
+from django.urls import path
+
+from .views import ReceiverView
+
+app_name = 'receiver'
 
 urlpatterns = [
-    path('receiver/', include('receiver.urls')),
-    path('admin/', admin.site.urls),
-    path('accounts/', include('django.contrib.auth.urls')),
+    path('', ReceiverView.as_view(), name='receiver'),
 ]
