@@ -117,7 +117,7 @@ Renderer.prototype.map = function (polygon /*, size, bbox, way, mimeType, layers
 
     function createStyles(layers) {
         let s = '<Map>';
-        let textSize = 0;
+        let textSize = 0.0;
         for (const layer of layers) {
             s += `<Style name="${layer.name}">`;
             s += ` <Rule><LineSymbolizer stroke="${layer.color}" stroke-width="${layer.width}" stroke-opacity="${layer.opacity}"/></Rule>`;
@@ -126,8 +126,8 @@ Renderer.prototype.map = function (polygon /*, size, bbox, way, mimeType, layers
                 textSize = layer['size'];
             }
         }
-        if (textSize === 0)
-            textSize = 12;
+        if (textSize === 0.0)
+            textSize = 12.0;
         s += '<Style name="names_style">';
         s += ' <Rule>';
         s += `  <TextSymbolizer face-name="DejaVu Sans Book" size="${textSize}" fill="white" halo-fill="black" halo-radius="2" horizontal-alignment="middle">[name]</TextSymbolizer>`;
