@@ -294,4 +294,5 @@ $RECYCLE.BIN/
 *.lnk
 
 files/
+static/assets/
 # End of https://www.gitignore.io/api/django,python,pycharm,windows,virtualenv

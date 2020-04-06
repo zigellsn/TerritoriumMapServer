@@ -13,6 +13,7 @@
 #  limitations under the License.
 
 import logging
+import uuid
 
 import pika
 from decouple import config
@@ -28,17 +29,25 @@ logger = logging.getLogger("django.request")
 @method_decorator(csrf_exempt, name="dispatch")
 class ReceiverView(LoginRequiredMixin, View):
 
+    @staticmethod
+    def create_job(polygon, user):
+        job = {"job": str(uuid.uuid4()),
+               "user": user.id,
+               "payload": polygon.decode("utf-8")}
+        return job
+
     def post(self, request, *args, **kwargs):
         request_type = request.META.get("HTTP_X_TERRITORIUM")
 
         if request_type == "map_rendering":
+            job = self.create_job(request.body, request.user)
             connection = pika.BlockingConnection(
                 pika.ConnectionParameters(config("RABBITMQ_HOST", default="localhost")))
             channel = connection.channel()
             channel.queue_declare(queue="mapnik")
             channel.basic_publish(exchange="",
                                   routing_key="mapnik",
-                                  body=request.body)
+                                  body=job)
             connection.close()
             return HttpResponse("success")
 
