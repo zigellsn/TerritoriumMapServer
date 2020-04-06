@@ -293,4 +293,5 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+files/
 # End of https://www.gitignore.io/api/django,python,pycharm,windows,virtualenv

@@ -12,12 +12,16 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from django.contrib import admin
-from django.urls import path, include
+from django.urls import path
+from django.views.generic import TemplateView
+
+from .views import FileServerView, DownloaderView, UploadView
+
+app_name = 'fileserver'
 
 urlpatterns = [
-    path('receiver/', include('receiver.urls')),
-    path('files/', include('fileserver.urls')),
-    path('admin/', admin.site.urls),
-    path('accounts/', include('django.contrib.auth.urls')),
+    path('list/', FileServerView.as_view(), name='file_server'),
+    path('upload/', UploadView.as_view(), name='upload'),
+    path('upload/success/', TemplateView.as_view(template_name='fileserver/success.html')),
+    path('dl/<str:pk>', DownloaderView.as_view(), name='download'),
 ]

@@ -12,12 +12,17 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from django.contrib import admin
-from django.urls import path, include
+from django import forms
+from django.contrib.auth.models import User
+from django.forms import ModelChoiceField
 
-urlpatterns = [
-    path('receiver/', include('receiver.urls')),
-    path('files/', include('fileserver.urls')),
-    path('admin/', admin.site.urls),
-    path('accounts/', include('django.contrib.auth.urls')),
-]
+from fileserver.models import MapResult
+
+
+class UploadFileForm(forms.ModelForm):
+    class Meta:
+        model = MapResult
+        fields = ["job", "user", "file"]
+
+    user = ModelChoiceField(queryset=User.objects.all(), empty_label=None,
+                            to_field_name="id")

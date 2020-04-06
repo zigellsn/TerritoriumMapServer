@@ -12,12 +12,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from django.contrib import admin
-from django.urls import path, include
+from django.apps import AppConfig
 
-urlpatterns = [
-    path('receiver/', include('receiver.urls')),
-    path('files/', include('fileserver.urls')),
-    path('admin/', admin.site.urls),
-    path('accounts/', include('django.contrib.auth.urls')),
-]
+
+class FileserverConfig(AppConfig):
+    name = 'fileserver'

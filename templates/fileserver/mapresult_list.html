@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+{% extends 'fileserver/base.html' %}
+{% load i18n %}
+{% get_current_language_bidi as LANGUAGE_BIDI %}
+{% block content %}
+    <div>
+        <table class="table">
+            <thead>
+            <tr>
+                <th class="fg-white {% if LANGUAGE_BIDI %}text-right{% endif %}">{% trans "File" %}</th>
+                <th class="fg-white {% if LANGUAGE_BIDI %}text-right{% endif %}">{% trans "Sendezeit" %}</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for map_result in mapresult_list %}
+                <tr>
+                    <td>
+                        <div><a href="{% url 'fileserver:download' pk=map_result.guid %}">{{ map_result.filename }}</a>
+                        </div>
+                    </td>
+                    <td>
+                        <div>{{ map_result.send_time }}</div>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
