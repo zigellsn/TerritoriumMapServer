@@ -14,10 +14,12 @@
 
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic import TemplateView
 
 urlpatterns = [
     path('receiver/', include('receiver.urls')),
     path('files/', include('fileserver.urls')),
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
+    path('accounts/loggedout/', TemplateView.as_view(template_name='fileserver/success.html')),
 ]

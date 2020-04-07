@@ -52,8 +52,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'TerritoriumMapServerFrontend.urls'
-LOGIN_REDIRECT_URL = '/files/files/abc'
-LOGOUT_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/files/list/'
+LOGOUT_REDIRECT_URL = '/accounts/loggedout/'
 LOGIN_URL = '/accounts/login'
 
 AUTHENTICATION_BACKENDS = [

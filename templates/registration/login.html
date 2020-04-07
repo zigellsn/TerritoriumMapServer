@@ -3,10 +3,28 @@
 {% block title %}Login{% endblock %}
 
 {% block content %}
-    <h2>Login</h2>
+    <h2 class="mdc-typography--display2">Login</h2>
     <form method="post">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button class="button primary mt-4" type="submit">Login</button>
+        <label class="mdc-text-field" data-mdc-auto-init="MDCTextField">
+            <div class="mdc-text-field__ripple"></div>
+            <input class="mdc-text-field__input" type="text" aria-labelledby="username" name="username"
+                   autocomplete="username" maxlength="150" required id="id_username">
+            <span class="mdc-floating-label" id="username">Username</span>
+            <div class="mdc-line-ripple"></div>
+        </label>
+        <label class="mdc-text-field" data-mdc-auto-init="MDCTextField">
+            <div class="mdc-text-field__ripple"></div>
+            <input type="password" class="mdc-text-field__input" aria-labelledby="password" name="password" required
+                   id="id_password" autocomplete="current-password">
+            <label class="mdc-floating-label" for="password">Password</label>
+            <div class="mdc-line-ripple"></div>
+        </label>
+        <p>
+            <button class="mdc-button mdc-button--raised" data-mdc-auto-init="MDCRipple" type="submit">
+                <div class="mdc-button__ripple"></div>
+                <span class="mdc-button__label">Login</span>
+            </button>
+        </p>
     </form>
 {% endblock %}
