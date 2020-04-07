@@ -1,5 +1,12 @@
 <!DOCTYPE html>
-<html lang="de">
+{% load i18n %}
+{% get_current_language_bidi as LANGUAGE_BIDI %}
+{% get_current_language as LANGUAGE %}
+{% if LANGUAGE_BIDI %}
+    <html dir="rtl" lang="{{ LANGUAGE }}">
+{% else %}
+    <html lang="{{ LANGUAGE }}">
+{% endif %}
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">

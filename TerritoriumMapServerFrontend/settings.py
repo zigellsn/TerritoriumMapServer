@@ -112,7 +112,7 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGES = config('LANGUAGES', default="en:English",
                    cast=Csv(cast=lambda s: (s.split(':')[0], _(s.split(':')[1])), delimiter=',', strip=' %*'))
 
-LANGUAGE_CODE = 'de'
+LANGUAGE_CODE = 'en'
 
 LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'static/locale'),
