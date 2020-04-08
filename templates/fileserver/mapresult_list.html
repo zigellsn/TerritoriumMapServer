@@ -9,7 +9,9 @@
             <thead>
             <tr class="mdc-data-table__header-row">
                 <th class="mdc-data-table__header-cell" role="columnheader" scope="col">{% trans "File" %}</th>
-                <th class="mdc-data-table__header-cell" role="columnheader" scope="col">{% trans "Create time" %}</th>
+                <th class="mdc-data-table__header-cell" role="columnheader" scope="col">{% trans "Job" %}</th>
+                <th class="mdc-data-table__header-cell" role="columnheader"
+                    scope="col">{% trans "Create time" %}</th>
             </tr>
             </thead>
             <tbody class="mdc-data-table__content">
@@ -21,8 +23,19 @@
                         </div>
                     </td>
                     <td class="mdc-data-table__cell">
+                        <div>{{ map_result.job.guid }}</div>
+                    </td>
+                    <td class="mdc-data-table__cell">
                         <div>{{ map_result.send_time }}</div>
                     </td>
+                </tr>
+            {% empty %}
+                <tr class="mdc-data-table__row">
+                    <td class="mdc-data-table__cell">
+                        No files
+                    </td>
+                    <td class="mdc-data-table__cell"></td>
+                    <td class="mdc-data-table__cell"></td>
                 </tr>
             {% endfor %}
             </tbody>

@@ -23,6 +23,8 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import View
 
+from fileserver.models import RenderJob
+
 logger = logging.getLogger("django.request")
 
 
@@ -32,7 +34,7 @@ class ReceiverView(LoginRequiredMixin, View):
     @staticmethod
     def create_job(polygon, user):
         job = {"job": str(uuid.uuid4()),
-               "user": user.id,
+               "owner": user.id,
                "payload": polygon.decode("utf-8")}
         return job
 
@@ -41,6 +43,7 @@ class ReceiverView(LoginRequiredMixin, View):
 
         if request_type == "map_rendering":
             job = self.create_job(request.body, request.user)
+            RenderJob.objects.create_render_job(guid=job["job"], owner=request.user)
             connection = pika.BlockingConnection(
                 pika.ConnectionParameters(config("RABBITMQ_HOST", default="localhost")))
             channel = connection.channel()

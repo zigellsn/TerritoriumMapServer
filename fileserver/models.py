@@ -22,31 +22,62 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 
+class RenderJobQuerySet(QuerySet):
+    def by_owner(self, owner, finished=None):
+        if finished:
+            return self.filter(owner=owner, finish_time__isnull=False)
+        elif not finished:
+            return self.filter(owner=owner, finish_time__isnull=True)
+        else:
+            return self.filter(owner=owner)
+
+
+class RenderJobManager(models.Manager):
+    def get_query_set(self):
+        return RenderJobQuerySet(self.model, using=self._db)
+
+    def by_owner(self, owner, finished=None):
+        return self.get_query_set().by_owner(owner, finished)
+
+    def create_render_job(self, guid, owner):
+        return self.create(guid=guid, owner=owner)
+
+
+class RenderJob(models.Model):
+    guid = models.CharField(_('GUID'), primary_key=True, max_length=36)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    send_time = models.DateTimeField(default=timezone.now)
+    finish_time = models.DateTimeField(null=True)
+
+    objects = RenderJobManager()
+
+
 class MapResultQuerySet(QuerySet):
-    def by_user(self, user):
-        return self.filter(user=user)
+    def by_job(self, job):
+        return self.filter(job__in=job)
 
     def by_guid(self, guid):
         return self.get(guid=guid)
 
     def invalid(self):
         date = timezone.now() - timedelta(days=7)
-        return self.filter(send_time__lt=date)
+        return self.filter(result_time__lt=date)
 
 
 class MapResultManager(models.Manager):
-
     def get_query_set(self):
         return MapResultQuerySet(self.model, using=self._db)
 
-    def create_map_result(self, job, user, file, file_name):
-        return self.create(job=job, user=user, file=file, file_name=file_name)
+    def create_map_result(self, guid, job, file):
+        return self.create(guid=guid, job=job, file=file)
 
     def delete_invalid(self):
         return self.get_query_set().invalid().delete()
 
-    def by_user(self, user):
-        map_results = self.get_query_set().by_user(user)
+    def by_job(self, job):
+        if not job:
+            return MapResult.objects.none()
+        map_results = self.get_query_set().by_job(job)
         for map_result in map_results:
             map_result.filename = os.path.basename(map_result.file.name)
         return map_results
@@ -57,9 +88,8 @@ class MapResultManager(models.Manager):
 
 class MapResult(models.Model):
     guid = models.CharField(_('GUID'), primary_key=True, max_length=36)
-    job = models.CharField(_('Job'), max_length=150)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    job = models.ForeignKey(RenderJob, on_delete=models.CASCADE)
     file = models.FileField(upload_to='maps')
-    send_time = models.DateTimeField(default=timezone.now)
+    result_time = models.DateTimeField(default=timezone.now)
 
     objects = MapResultManager()

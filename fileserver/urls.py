@@ -15,12 +15,12 @@
 from django.urls import path
 from django.views.generic import TemplateView
 
-from .views import FileServerView, DownloaderView, UploadView
+from .views import FileListView, DownloaderView, UploadView
 
 app_name = 'fileserver'
 
 urlpatterns = [
-    path('list/', FileServerView.as_view(), name='file_server'),
+    path('list/', FileListView.as_view(), name='filelist'),
     path('upload/', UploadView.as_view(), name='upload'),
     path('upload/success/', TemplateView.as_view(template_name='fileserver/success.html')),
     path('dl/<str:pk>', DownloaderView.as_view(), name='download'),

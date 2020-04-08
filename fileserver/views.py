@@ -17,13 +17,12 @@ import os
 import uuid
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.models import User
 from django.http import StreamingHttpResponse, HttpResponse
 from django.views import View
 from django.views.generic import ListView, FormView
 
 from .forms import UploadFileForm
-from .models import MapResult
+from .models import MapResult, RenderJob
 
 
 class DownloaderView(LoginRequiredMixin, View):
@@ -43,16 +42,16 @@ class DownloaderView(LoginRequiredMixin, View):
         return response
 
 
-class FileServerView(LoginRequiredMixin, ListView):
+class FileListView(LoginRequiredMixin, ListView):
     model = MapResult
-    return_403 = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         MapResult.objects.delete_invalid()
 
     def get_queryset(self):
-        return MapResult.objects.by_user(self.request.user)
+        render_jobs = RenderJob.objects.by_owner(self.request.user)
+        return MapResult.objects.by_job(render_jobs)
 
 
 class UploadView(LoginRequiredMixin, FormView):
@@ -62,8 +61,6 @@ class UploadView(LoginRequiredMixin, FormView):
     success_url = 'success'
 
     def form_valid(self, form):
-        user = User.objects.get(id=self.request.POST["user"])
-        instance = MapResult(guid=uuid.uuid4(), job=self.request.POST["job"], file=self.request.FILES["file"],
-                             user=user)
-        instance.save()
+        MapResult.objects.create_map_result(guid=uuid.uuid4(), job=self.request.POST["job"],
+                                            file=self.request.FILES["file"])
         return super().form_valid(form)
