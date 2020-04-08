@@ -43,15 +43,18 @@ class ReceiverView(LoginRequiredMixin, View):
 
         if request_type == "map_rendering":
             job = self.create_job(request.body, request.user)
-            RenderJob.objects.create_render_job(guid=job["job"], owner=request.user)
-            connection = pika.BlockingConnection(
-                pika.ConnectionParameters(config("RABBITMQ_HOST", default="localhost")))
-            channel = connection.channel()
-            channel.queue_declare(queue="mapnik")
-            channel.basic_publish(exchange="",
-                                  routing_key="mapnik",
-                                  body=job)
-            connection.close()
+            try:
+                connection = pika.BlockingConnection(
+                    pika.ConnectionParameters(config("RABBITMQ_HOST", default="localhost")))
+                channel = connection.channel()
+                channel.queue_declare(queue="mapnik")
+                channel.basic_publish(exchange="",
+                                      routing_key="mapnik",
+                                      body=job)
+                connection.close()
+                RenderJob.objects.create_render_job(guid=job["job"], owner=request.user)
+            except pika.exceptions.AMQPConnectionError:
+                return HttpResponse(status=500)
             return HttpResponse("success")
 
         return HttpResponse(status=204)

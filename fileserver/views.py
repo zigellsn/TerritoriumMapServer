@@ -32,7 +32,8 @@ class DownloaderView(LoginRequiredMixin, View):
         map_result = MapResult.objects.by_guid(kwargs["pk"])
         if map_result is None:
             return HttpResponse(403)
-        if map_result.user != request.user:
+        render_job = RenderJob.objects.get(guid=map_result.job.guid)
+        if render_job.owner != request.user:
             return HttpResponse(403)
         url = f"files/{map_result.file}"
         filename = os.path.basename(url)
@@ -61,6 +62,7 @@ class UploadView(LoginRequiredMixin, FormView):
     success_url = 'success'
 
     def form_valid(self, form):
-        MapResult.objects.create_map_result(guid=uuid.uuid4(), job=self.request.POST["job"],
+        render_job = RenderJob.objects.get(guid=self.request.POST["job"])
+        MapResult.objects.create_map_result(guid=uuid.uuid4(), job=render_job,
                                             file=self.request.FILES["file"])
         return super().form_valid(form)
