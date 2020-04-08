@@ -56,7 +56,6 @@ class FileListView(LoginRequiredMixin, ListView):
 
 
 class UploadView(LoginRequiredMixin, FormView):
-    model = MapResult
     template_name = 'fileserver/upload.html'
     form_class = UploadFileForm
     success_url = 'success'
