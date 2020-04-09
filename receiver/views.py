@@ -11,7 +11,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-
+import json
 import logging
 import uuid
 
@@ -50,7 +50,7 @@ class ReceiverView(LoginRequiredMixin, View):
                 channel.queue_declare(queue="mapnik")
                 channel.basic_publish(exchange="",
                                       routing_key="mapnik",
-                                      body=job)
+                                      body=json.dumps(job))
                 connection.close()
                 RenderJob.objects.create_render_job(guid=job["job"], owner=request.user)
             except pika.exceptions.AMQPConnectionError:
