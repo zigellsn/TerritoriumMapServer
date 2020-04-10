@@ -16,6 +16,8 @@ from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import TemplateView
 
+from TerritoriumMapServerFrontend import settings
+
 urlpatterns = [
     path('receiver/', include('receiver.urls')),
     path('files/', include('fileserver.urls')),
@@ -23,3 +25,13 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),
     path('accounts/loggedout/', TemplateView.as_view(template_name='fileserver/success.html')),
 ]
+
+if settings.DEBUG:
+    try:
+        import debug_toolbar
+    except ImportError:
+        pass
+    else:
+        urlpatterns = [
+            path('__debug__/', include(debug_toolbar.urls)),
+        ] + urlpatterns

@@ -1,7 +1,13 @@
-<!DOCTYPE html>
-{% extends 'fileserver/base.html' %}
+{% extends 'base.html' %}
 {% load i18n %}
 {% get_current_language_bidi as LANGUAGE_BIDI %}
+
+{% block title %}Files{% endblock %}
+
+{% block header %}
+    {% include "fileserver/header.html" %}
+{% endblock %}
+
 {% block content %}
     <p>
     <div class="mdc-data-table">

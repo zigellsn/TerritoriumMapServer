@@ -13,32 +13,39 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+from pathlib import Path
+
 from decouple import config, Csv
 from django.utils.translation import gettext_lazy as _
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PROJECT_PACKAGE = Path(__file__).resolve().parent
+
+BASE_DIR = PROJECT_PACKAGE.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '(%3=+s0p$(^&%o_^qa_9wtqbn5+!m7y5qkj)6d1xt!#m*l1y%l'
+SECRET_KEY = config("SECRET_KEY", default='abc_change_key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config("DEBUG", default=True)
 
-ALLOWED_HOSTS = []
+VERSION = "0.1.0-alpha"
+
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="127.0.0.1,localhost", cast=Csv())
 
 # Application definition
 
 INSTALLED_APPS = [
+    'receiver',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'fileserver'
+    'fileserver.apps.FileserverConfig',
 ]
 
 MIDDLEWARE = [
@@ -128,9 +135,24 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
-
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 STATIC_URL = '/static/assets/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/assets')
 
+STATICFILES_DIRS = [str(PROJECT_PACKAGE.joinpath('static'))]
+
 MEDIA_URL = '/files/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'files/')
+
+if DEBUG:
+    try:
+        import debug_toolbar
+    except ImportError:
+        pass
+    else:
+        INSTALLED_APPS.append('debug_toolbar')
+        INTERNAL_IPS = ['127.0.0.1']
+        MIDDLEWARE.insert(
+            MIDDLEWARE.index('django.middleware.common.CommonMiddleware') + 1,
+            'debug_toolbar.middleware.DebugToolbarMiddleware'
+        )

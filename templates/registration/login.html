@@ -1,7 +1,10 @@
-<!DOCTYPE html>
-{% extends 'registration/base.html' %}
+{% extends 'base.html' %}
 
 {% block title %}Login{% endblock %}
+
+{% block header %}
+    {% include "registration/header.html" %}
+{% endblock %}
 
 {% block content %}
     <h2 class="mdc-typography--display2">Login</h2>
