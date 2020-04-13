@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+@use "@material/theme" with (
+  $primary: #FF8F00,
+  $secondary: #24a1ff,
+  $on-primary:#000000,
+  $on-secondary: #000000,
+);
 @use '@material/button/mdc-button';
 @use '@material/button';
 @use "@material/textfield/mdc-text-field";
@@ -21,5 +27,6 @@
 @use "@material/data-table/mdc-data-table";
 @use "@material/top-app-bar/mdc-top-app-bar";
 @use "@material/icon-button/mdc-icon-button";
+@use "@material/elevation/mdc-elevation";
 
 @import 'node_modules/normalize.css/normalize';
