@@ -30,3 +30,8 @@
 @use "@material/elevation/mdc-elevation";
 
 @import 'node_modules/normalize.css/normalize';
+
+.root {
+  margin-left: 24px;
+  margin-right: 24px;
+}
