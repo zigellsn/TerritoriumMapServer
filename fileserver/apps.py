@@ -19,6 +19,7 @@ import pika
 from decouple import config
 from django.apps import AppConfig
 from django.core.files.base import ContentFile
+from django.utils import timezone
 
 
 class FileserverConfig(AppConfig):
@@ -32,7 +33,8 @@ class FileserverConfig(AppConfig):
 
 class AMQPConsuming(threading.Thread):
 
-    def callback(self, ch, method, properties, body):
+    @staticmethod
+    def callback(ch, method, properties, body):
         try:
             result = json.loads(body)
         except AttributeError as e:
@@ -43,15 +45,20 @@ class AMQPConsuming(threading.Thread):
         try:
             from fileserver.models import RenderJob, MapResult
             render_job = RenderJob.objects.get(guid=result["job"])
+            if render_job.finish_time is not None:
+                return
+            render_job.finish_time = timezone.now()
             map_result = MapResult()
             map_result.guid = uuid.uuid4()
             map_result.job = render_job
             map_result.file.save(result['filename'], ContentFile(result["content"]))
             map_result.save()
+            render_job.save()
         except Exception as e:
             print(e)
 
-    def _get_connection(self):
+    @staticmethod
+    def _get_connection():
         parameters = pika.ConnectionParameters(config("RABBITMQ_HOST", default="localhost"))
         return pika.BlockingConnection(parameters)
 

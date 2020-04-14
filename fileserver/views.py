@@ -19,7 +19,7 @@ import uuid
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import StreamingHttpResponse, HttpResponse
 from django.views import View
-from django.views.generic import ListView, FormView
+from django.views.generic import ListView, FormView, DetailView
 
 from .forms import UploadFileForm
 from .models import MapResult, RenderJob
@@ -53,6 +53,10 @@ class FileListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         render_jobs = RenderJob.objects.by_owner(self.request.user)
         return MapResult.objects.by_job(render_jobs)
+
+
+class JobDetailView(LoginRequiredMixin, DetailView):
+    model = RenderJob
 
 
 class UploadView(LoginRequiredMixin, FormView):

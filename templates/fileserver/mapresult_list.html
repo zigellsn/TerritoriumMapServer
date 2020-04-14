@@ -4,7 +4,7 @@
 {% block title %}Files{% endblock %}
 
 {% block header %}
-    {% include "fileserver/header.html" %}
+    {% include "fileserver/header.html" with title="Files" %}
 {% endblock %}
 
 {% block content %}
@@ -31,7 +31,9 @@
                         <div>{{ map_result.file.size|filesizeformat }}</div>
                     </td>
                     <td class="mdc-data-table__cell">
-                        <div>{{ map_result.job.guid }}</div>
+                        <div>
+                            <a href="{% url 'fileserver:jobdetail' pk=map_result.job.guid %}">{{ map_result.job.guid }}</a>
+                        </div>
                     </td>
                     <td class="mdc-data-table__cell">
                         <div>{{ map_result.result_time }}</div>
