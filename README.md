@@ -19,8 +19,8 @@ Copy project.mml from [openstreetmap-carto](https://github.com/gravitystorm/open
 adjust if necessary.
 
 ``` bash
-docker-compose run style
-docker-compose run shapefiles
+docker-compose -f docker-compose.import.yml run style
+docker-compose -f docker-compose.import.yml run shapefiles
 cd ./exchange/data/
 wget https://tile.openstreetmap.de/shapefiles/river-polygons-reduced-3857.zip
 unzip river-polygons-reduced-3857.zip
@@ -31,9 +31,9 @@ unzip ocean-polygons-reduced-3857.zip
 cd ../..
 ```
 
-Download pbf file and place in ./exchange. Adjust in docker-compose.yml environment variable OSM2PGSQL_DATAFILE.
+Download pbf file and place in ./exchange. Adjust in docker-compose.import.yml environment variable OSM2PGSQL_DATAFILE.
 
 ``` bash
-docker-compose run import
-docker-compose up mapnik
+docker-compose -f docker-compose.import.yml run import
+docker-compose up -d --build mapnik
 ```
