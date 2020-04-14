@@ -122,7 +122,7 @@ LANGUAGES = config('LANGUAGES', default="en:English",
 LANGUAGE_CODE = 'en'
 
 LOCALE_PATHS = (
-    os.path.join(BASE_DIR, 'static/locale'),
+    str(PROJECT_PACKAGE.joinpath('locale')),
 )
 
 TIME_ZONE = 'CET'
