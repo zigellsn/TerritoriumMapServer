@@ -1,4 +1,3 @@
-# From https://github.com/giggls/openstreetmap-carto-de
 FROM postgis/postgis:12-3.0
 
 RUN set -ex \
@@ -10,7 +9,7 @@ RUN set -ex \
   wget \
   libkakasi2-dev \
   pandoc \
-  postgresql-server-dev-11 \
+  postgresql-server-dev-12 \
   ca-certificates' \
   && apt-get update && apt-get install -y $buildDeps libkakasi2 --no-install-recommends \
   && mkdir -p /build \

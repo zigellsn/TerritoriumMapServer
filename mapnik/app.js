@@ -44,13 +44,13 @@ amqp.connect(`amqp://${host}`, function (error0, connection) {
         });
 
         let renderer = new Renderer();
-        console.log(" [*] Waiting for messages in %s. To exit press CTRL+C", recQueue);
         channel.consume(recQueue, function (msg) {
             let payload = msg.content.toString();
             let dict = JSON.parse(payload);
             let buffer = renderer.map(dict['payload']['polygon']);
             console.log("Rendering finished");
             if (buffer !== undefined) {
+                console.log("Buffer valid");
                 let extension = '';
                 if (dict['payload']['polygon']['mediaType'] === 'image/png')
                     extension = 'png';
@@ -65,6 +65,7 @@ amqp.connect(`amqp://${host}`, function (error0, connection) {
                     'filename': `map_${dateString}_${timeString}.${extension}`
                 };
                 channel.sendToQueue(sendQueue, Buffer.from(JSON.stringify(result)));
+                console.log('Result sent to queue');
             }
         }, {
             noAck: true

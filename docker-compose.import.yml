@@ -18,6 +18,7 @@ services:
       - PGHOST=db
       - PGPORT=5432
       - PGUSER=tms
+      - PGPASSWORD=tms
       # - OSM2PGSQL_DATAFILE=...
   style:
     image: tms/style:1
@@ -34,6 +35,7 @@ services:
       - PGHOST=db
       - PGPORT=5432
       - PGUSER=tms
+      - PGPASSWORD=tms
   python-base:
     image: tms/python-base:slim
     build:
@@ -41,6 +43,8 @@ services:
       dockerfile: Dockerfile.python-base
   shapefiles:
     image: tms/shapefiles:1
+    depends_on:
+      - python-base
     build:
       context: shapefiles/
       dockerfile: Dockerfile
@@ -48,24 +52,3 @@ services:
       - type: bind
         source: ./exchange
         target: /output
-  db:
-    image: tms/db:1
-    build:
-      context: db/
-      dockerfile: Dockerfile
-    networks:
-      - tms-net
-    ports:
-      - "127.0.0.1:5432:5432"
-    volumes:
-      - type: bind
-        source: ./data
-        target: /var/lib/postgresql/data
-    environment:
-      - PG_WORK_MEM
-      - PG_MAINTENANCE_WORK_MEM
-
-networks:
-  tms-net:
-    name: "tms-net"
-    driver:  bridge

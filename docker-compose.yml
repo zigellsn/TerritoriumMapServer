@@ -15,19 +15,20 @@ services:
         source: ./exchange
         target: /input
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
     environment:
       - DBNAME=osm
       - PGHOST=db
       - PGPORT=5432
       - PGUSER=tms
+      - PGPASSWORD=tms
       - RABBITMQ_HOST=mq
   mq:
     image: rabbitmq:3-alpine
     networks:
       - tms-net
     ports:
-      - "127.0.0.1:5672:5672"
+      - "5672:5672"
   db:
     image: tms/db:1
     build:
@@ -42,6 +43,9 @@ services:
         source: ./data
         target: /var/lib/postgresql/data
     environment:
+      - POSTGRES_PASSWORD=tms
+      - POSTGRES_USER=tms
+      - POSTGRES_DB=osm
       - PG_WORK_MEM
       - PG_MAINTENANCE_WORK_MEM
 

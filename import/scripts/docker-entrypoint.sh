@@ -12,6 +12,10 @@ if [ -n "${PGUSER}" ]; then
   OSMUSER="-U${PGUSER}"
 fi
 
+if [ -n "${PGPASSWORD}" ]; then
+  OSMPASSWORD="--password ${PGPASSWORD}"
+fi
+
 if [ -n "${PGUSER}" ]; then
   psql -U postgres -c "SELECT 1 FROM pg_roles WHERE rolname='${PGUSER}'" | grep -q 1 ||
     if [ -n "${PGPASSWORD}" ]; then
@@ -63,6 +67,7 @@ else
     "${OSMHOST}" \
     "${OSMPORT}" \
     "${OSMUSER}" \
+    "${OSMPASSWORD}" \
     --cache "${OSM2PGSQL_CACHE}" \
     --number-processes "${OSM2PGSQL_NUMPROC}" \
     --hstore \
