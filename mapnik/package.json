@@ -3,23 +3,13 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "node bin/www"
+    "start": "node app.js"
   },
   "dependencies": {
-    "acorn": "~5.7.4",
+    "uuid": "^3.3.3",
     "amqplib": "^0.5.5",
     "canvas": "~2.6.1",
-    "clean-css": "~4.1.11",
-    "cookie-parser": "~1.4.4",
-    "debug": "~2.6.9",
-    "express": "~4.16.1",
-    "http-errors": "~1.6.3",
-    "kind-of": "~6.0.3",
-    "mapnik": "~4.4.0",
-    "morgan": "~1.9.1",
-    "pug": "~2.0.4"
-  },
-  "devDependencies": {
-    "uuid": "^3.3.3"
+    "moment": "^2.24.0",
+    "mapnik": "^4.4.0"
   }
 }

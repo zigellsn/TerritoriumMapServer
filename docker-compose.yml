@@ -9,6 +9,7 @@ services:
       - tms-net
     depends_on:
       - db
+      - mq
     volumes:
       - type: bind
         source: ./exchange
@@ -20,6 +21,13 @@ services:
       - PGHOST=db
       - PGPORT=5432
       - PGUSER=tms
+      - RABBITMQ_HOST=mq
+  mq:
+    image: rabbitmq:3-alpine
+    networks:
+      - tms-net
+    ports:
+      - "127.0.0.1:5672:5672"
   db:
     image: tms/db:1
     build:

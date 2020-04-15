@@ -54,7 +54,7 @@ function addCopyrightTextVector(src, width, height) {
     return `${src.slice(0, len - 7)}<text fill="#0" font-size="10" font-family="sans-serif" x="10" y="${height - 32}"><tspan dy="18.2" x="10">${copyright}</tspan></text>${src.slice(len - 7, len)}`;
 }
 
-Renderer.prototype.map = function (polygon /*, size, bbox, way, mimeType, layers, names*/) {
+Renderer.prototype.map = function (polygon /*, size, bbox, way, mediaType, layers, names*/) {
 
     function createLayers(polygon) {
         let layers = [];
@@ -176,7 +176,7 @@ Renderer.prototype.map = function (polygon /*, size, bbox, way, mimeType, layers
         m.zoomToBox(polygon['bbox']);
         addAdditionalLayers(m, layers, styles, inline);
         let src;
-        if (polygon['mimeType'] === 'image/xml+svg') {
+        if (polygon['mediaType'] === 'image/xml+svg') {
             if (!mapnik.supports.cairo) {
                 console.log('So sad... no Cairo');
                 return undefined;

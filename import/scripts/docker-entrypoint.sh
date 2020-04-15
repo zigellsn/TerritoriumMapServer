@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
 if [ -n "${PGHOST}" ]; then
   OSMHOST="-H${PGHOST}"

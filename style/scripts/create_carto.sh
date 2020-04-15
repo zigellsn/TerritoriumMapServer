@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
 if [ "${STYLE:-de}" = 'de' ]; then
   git clone https://github.com/giggls/openstreetmap-carto-de.git osm-carto

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 # From https://github.com/giggls/openstreetmap-carto-de
 
 set -e

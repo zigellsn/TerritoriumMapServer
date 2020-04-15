@@ -1,5 +1,5 @@
 # From https://github.com/giggls/openstreetmap-carto-de
-FROM mdillon/postgis:11
+FROM postgis/postgis:12-3.0
 
 RUN set -ex \
   && buildDeps=' \

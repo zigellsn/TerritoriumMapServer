@@ -23,4 +23,4 @@ RUN npm install
 COPY . .
 EXPOSE 5000
 
-CMD [ "node", "./bin/www" ]
+CMD [ "node", "./app.js" ]

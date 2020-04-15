@@ -1,41 +1,73 @@
-let createError = require('http-errors');
-let express = require('express');
-let path = require('path');
-let cookieParser = require('cookie-parser');
-let logger = require('morgan');
+/*
+ * Copyright 2019-2020 Simon Zigelli
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-let indexRouter = require('./routes');
-let usersRouter = require('./routes/users');
+'use strict';
 
-let app = express();
+const moment = require("moment");
+const amqp = require('amqplib/callback_api');
+const Renderer = require('./renderer/renderer');
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'pug');
+let host = process.env.RABBITMQ_HOST;
+if (host === undefined || host === '')
+    host = 'localhost';
 
-app.use(logger('dev'));
-app.use(express.json({limit: '2mb'}));
-app.use(express.urlencoded({extended: false}));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+amqp.connect(`amqp://${host}`, function (error0, connection) {
+    if (error0) {
+        throw error0;
+    }
+    connection.createChannel(function (error1, channel) {
+        if (error1) {
+            throw error1;
+        }
+        let recQueue = 'mapnik';
+        let sendQueue = 'maps';
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+        channel.assertQueue(recQueue, {
+            durable: false
+        });
 
-// catch 404 and forward to error handler
-app.use(function (req, res, next) {
-    next(createError(404));
+        channel.assertQueue(sendQueue, {
+            durable: false
+        });
+
+        let renderer = new Renderer();
+        console.log(" [*] Waiting for messages in %s. To exit press CTRL+C", recQueue);
+        channel.consume(recQueue, function (msg) {
+            let payload = msg.content.toString();
+            let dict = JSON.parse(payload);
+            let buffer = renderer.map(dict['payload']['polygon']);
+            console.log("Rendering finished");
+            if (buffer !== undefined) {
+                let extension = '';
+                if (dict['payload']['polygon']['mediaType'] === 'image/png')
+                    extension = 'png';
+                else if (dict['payload']['polygon']['mediaType'] === 'image/xml+svg')
+                    extension = 'svg';
+                let now = new Date();
+                let dateString = moment(now).format('YYYYMMDD');
+                let timeString = moment(now).format('HHmmss');
+                let result = {
+                    'job': dict['job'],
+                    'payload': buffer,
+                    'filename': `map_${dateString}_${timeString}.${extension}`
+                };
+                channel.sendToQueue(sendQueue, Buffer.from(JSON.stringify(result)));
+            }
+        }, {
+            noAck: true
+        });
+    });
 });
-
-// error handler
-app.use(function (err, req, res, next) {
-    // set locals, only providing error in development
-    res.locals.message = err.message;
-    res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-    // render the error page
-    res.status(err.status || 500);
-    res.render('error');
-});
-
-module.exports = app;
