@@ -15,6 +15,7 @@
             <tr class="mdc-data-table__header-row">
                 <th class="mdc-data-table__header-cell" role="columnheader" scope="col">{% trans "File" %}</th>
                 <th class="mdc-data-table__header-cell" role="columnheader" scope="col">{% trans "Size" %}</th>
+                <th class="mdc-data-table__header-cell" role="columnheader" scope="col">{% trans "Media type" %}</th>
                 <th class="mdc-data-table__header-cell" role="columnheader" scope="col">{% trans "Job" %}</th>
                 <th class="mdc-data-table__header-cell" role="columnheader" scope="col">{% trans "Create time" %}</th>
             </tr>
@@ -31,12 +32,15 @@
                         <div>{{ map_result.file.size|filesizeformat }}</div>
                     </td>
                     <td class="mdc-data-table__cell">
+                        <div>{{ map_result.media_type }}</div>
+                    </td>
+                    <td class="mdc-data-table__cell">
                         <div>
                             <a href="{% url 'fileserver:jobdetail' pk=map_result.job.guid %}">{{ map_result.job.guid }}</a>
                         </div>
                     </td>
                     <td class="mdc-data-table__cell">
-                        <div>{{ map_result.result_time }}</div>
+                        <div>{{ map_result.result_time|default_if_none:"pending..." }}</div>
                     </td>
                 </tr>
             {% empty %}

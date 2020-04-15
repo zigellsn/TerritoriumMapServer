@@ -12,19 +12,22 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import TemplateView
 
 from TerritoriumMapServerFrontend import settings
 
-urlpatterns = [
+urlpatterns = []
+urlpatterns += i18n_patterns(
     path('receiver/', include('receiver.urls')),
     path('files/', include('fileserver.urls')),
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
     path('accounts/loggedout/', TemplateView.as_view(template_name='fileserver/success.html')),
-]
+    prefix_default_language=False
+)
 
 if settings.DEBUG:
     try:

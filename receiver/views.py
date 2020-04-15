@@ -32,17 +32,16 @@ logger = logging.getLogger("django.request")
 class ReceiverView(LoginRequiredMixin, View):
 
     @staticmethod
-    def create_job(polygon, user):
+    def create_job(polygon):
         job = {"job": str(uuid.uuid4()),
-               "owner": user.id,
-               "payload": polygon.decode("utf-8")}
+               "payload": json.loads(polygon)}
         return job
 
     def post(self, request, *args, **kwargs):
         request_type = request.META.get("HTTP_X_TERRITORIUM")
 
         if request_type == "map_rendering":
-            job = self.create_job(request.body, request.user)
+            job = self.create_job(request.body)
             try:
                 connection = pika.BlockingConnection(
                     pika.ConnectionParameters(config("RABBITMQ_HOST", default="localhost")))
@@ -52,8 +51,10 @@ class ReceiverView(LoginRequiredMixin, View):
                                       routing_key="mapnik",
                                       body=json.dumps(job))
                 connection.close()
-                RenderJob.objects.create_render_job(guid=job["job"], owner=request.user)
-            except pika.exceptions.AMQPConnectionError:
+                RenderJob.objects.create_render_job(guid=job["job"], owner=request.user,
+                                                    media_type=job["payload"]["polygon"]["mediaType"])
+            except pika.exceptions.AMQPConnectionError as e:
+                print(e)
                 return HttpResponse(status=500)
             return HttpResponse("success")
 

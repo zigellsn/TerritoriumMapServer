@@ -40,7 +40,7 @@ class AMQPConsuming(threading.Thread):
         except AttributeError as e:
             print(e)
             return
-        if not ("job" in result and "content" in result and "filename" in result):
+        if not ("job" in result and "payload" in result and "filename" in result):
             return
         try:
             from fileserver.models import RenderJob, MapResult
@@ -51,7 +51,7 @@ class AMQPConsuming(threading.Thread):
             map_result = MapResult()
             map_result.guid = uuid.uuid4()
             map_result.job = render_job
-            map_result.file.save(result['filename'], ContentFile(result["content"]))
+            map_result.file.save(result['filename'], ContentFile(bytes(result["payload"]["data"])))
             map_result.save()
             render_job.save()
         except Exception as e:
