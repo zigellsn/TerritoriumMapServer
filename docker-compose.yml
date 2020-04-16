@@ -48,6 +48,20 @@ services:
       - POSTGRES_DB=osm
       - PG_WORK_MEM
       - PG_MAINTENANCE_WORK_MEM
+  frontend:
+    build:
+      context: frontend/
+    image: "tms/frontend:latest"
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mq
+      - db
+    volumes:
+      - type: bind
+        source: ./frontend/files
+        target: /home/pyuser/files
 
 networks:
   tms-net:
