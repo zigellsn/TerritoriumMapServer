@@ -8,14 +8,14 @@ services:
     networks:
       - tms-net
     depends_on:
-      - db
+      - geodb
     volumes:
       - type: bind
         source: ./exchange
         target: /input
     environment:
       - DBNAME=osm
-      - PGHOST=db
+      - PGHOST=geodb
       - PGPORT=5432
       - PGUSER=tms
       - PGPASSWORD=tms
@@ -32,7 +32,7 @@ services:
     environment:
       - STYLE=de
       - DBNAME=osm
-      - PGHOST=db
+      - PGHOST=geodb
       - PGPORT=5432
       - PGUSER=tms
       - PGPASSWORD=tms

@@ -8,7 +8,7 @@ services:
     networks:
       - tms-net
     depends_on:
-      - db
+      - geodb
       - mq
     volumes:
       - type: bind
@@ -18,7 +18,7 @@ services:
       - "127.0.0.1:5000:5000"
     environment:
       - DBNAME=osm
-      - PGHOST=db
+      - PGHOST=geodb
       - PGPORT=5432
       - PGUSER=tms
       - PGPASSWORD=tms
@@ -29,7 +29,7 @@ services:
       - tms-net
     ports:
       - "5672:5672"
-  db:
+  geodb:
     image: tms/db:1
     build:
       context: db/
@@ -40,7 +40,7 @@ services:
       - "127.0.0.1:5432:5432"
     volumes:
       - type: bind
-        source: ./data
+        source: ./geodata
         target: /var/lib/postgresql/data
     environment:
       - POSTGRES_PASSWORD=tms
@@ -48,6 +48,18 @@ services:
       - POSTGRES_DB=osm
       - PG_WORK_MEM
       - PG_MAINTENANCE_WORK_MEM
+  db:
+    image: postgres:12.2-alpine
+    networks:
+      - tms-net
+    volumes:
+      - type: bind
+        source: ./data
+        target: /var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=tms
+      - POSTGRES_PASSWORD=tms
+      - POSTGRES_DB=tms_frontend_dev
   frontend:
     build:
       context: frontend/
@@ -55,12 +67,14 @@ services:
     command: python manage.py runserver 0.0.0.0:8000
     ports:
       - "8000:8000"
+    networks:
+      - tms-net
     depends_on:
       - mq
       - db
     volumes:
       - type: bind
-        source: ./frontend/files
+        source: ./files
         target: /home/pyuser/files
 
 networks:

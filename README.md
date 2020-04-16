@@ -10,7 +10,8 @@
 ``` bash
 mkdir exchange
 mkdir data
-docker-compose run db
+mkdir geodata
+docker-compose run geodb
 ```
 
 Copy project.mml from [openstreetmap-carto](https://github.com/gravitystorm/openstreetmap-carto) or 
@@ -30,9 +31,9 @@ unzip ocean-polygons-reduced-3857.zip
 cd ../..
 ```
 
-Download pbf file and place in ./exchange. Adjust in docker-compose.import.yml environment variable OSM2PGSQL_DATAFILE.
+Download pbf file and place in ./exchange. Adjust in docker-compose.import.yml environment variable OSM2PGSQL_DATAFILE accordingly.
 
 ``` bash
 docker-compose -f docker-compose.yml -f docker-compose.import.yml run import
-docker-compose up -d --build mapnik
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 ```

@@ -2,6 +2,8 @@ version: '3.7'
 services:
   db:
     restart: always
+  geodb:
+    restart: always
   mq:
     restart: always
   nginx:
