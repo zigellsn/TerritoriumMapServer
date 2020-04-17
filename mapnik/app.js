@@ -21,10 +21,13 @@ const amqp = require('amqplib/callback_api');
 const Renderer = require('./renderer/renderer');
 
 let host = process.env.RABBITMQ_HOST;
+let user = process.env.RABBITMQ_DEFAULT_USER;
+let password = process.env.RABBITMQ_DEFAULT_PASS;
 if (host === undefined || host === '')
     host = 'localhost';
 
-amqp.connect(`amqp://${host}`, function (error0, connection) {
+const opt = { credentials: require('amqplib').credentials.plain(user, password) };
+amqp.connect(`amqp://${host}`, opt, function (error0, connection) {
     if (error0) {
         throw error0;
     }
@@ -56,13 +59,19 @@ amqp.connect(`amqp://${host}`, function (error0, connection) {
                     extension = 'png';
                 else if (dict['payload']['polygon']['mediaType'] === 'image/xml+svg')
                     extension = 'svg';
+                let name = '';
+                if (dict['payload']['polygon'].hasOwnProperty('name')) {
+                    name = dict['payload']['polygon']['name']['text'];
+                }
+                if (name === '')
+                    name = 'map';
                 let now = new Date();
                 let dateString = moment(now).format('YYYYMMDD');
                 let timeString = moment(now).format('HHmmss');
                 let result = {
                     'job': dict['job'],
                     'payload': buffer,
-                    'filename': `map_${dateString}_${timeString}.${extension}`
+                    'filename': `${name}_${dateString}_${timeString}.${extension}`
                 };
                 channel.sendToQueue(sendQueue, Buffer.from(JSON.stringify(result)));
                 console.log('Result sent to queue');

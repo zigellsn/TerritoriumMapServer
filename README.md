@@ -11,6 +11,7 @@
 mkdir exchange
 mkdir data
 mkdir geodata
+mkdir files
 docker-compose run geodb
 ```
 
@@ -33,7 +34,13 @@ cd ../..
 
 Download pbf file and place in ./exchange. Adjust in docker-compose.import.yml environment variable OSM2PGSQL_DATAFILE accordingly.
 
+Copy the file .env.example to .env and adjust to your needs.
+``` bash
+cp./ frontend/.env.example ./frontend/.env
+```
+Then run
 ``` bash
 docker-compose -f docker-compose.yml -f docker-compose.import.yml run import
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml exec frontend python manage.py createsuperuser
 ```

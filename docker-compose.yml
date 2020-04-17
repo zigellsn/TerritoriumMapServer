@@ -1,34 +1,15 @@
 version: '3.7'
 services:
-  mapnik:
-    image: tms/mapnik:1
-    build:
-      context: mapnik/
-      dockerfile: Dockerfile
-    networks:
-      - tms-net
-    depends_on:
-      - geodb
-      - mq
-    volumes:
-      - type: bind
-        source: ./exchange
-        target: /input
-    ports:
-      - "127.0.0.1:5000:5000"
-    environment:
-      - DBNAME=osm
-      - PGHOST=geodb
-      - PGPORT=5432
-      - PGUSER=tms
-      - PGPASSWORD=tms
-      - RABBITMQ_HOST=mq
   mq:
     image: rabbitmq:3-alpine
     networks:
       - tms-net
     ports:
       - "5672:5672"
+    environment:
+      - RABBITMQ_ERLANG_COOKIE='AYMNAPKRPCPJVPFYAJZX'
+      - RABBITMQ_DEFAULT_USER=tms
+      - RABBITMQ_DEFAULT_PASS=tms
   geodb:
     image: tms/db:1
     build:
@@ -60,6 +41,32 @@ services:
       - POSTGRES_USER=tms
       - POSTGRES_PASSWORD=tms
       - POSTGRES_DB=tms_frontend_dev
+  mapnik:
+    image: tms/mapnik:1
+    build:
+      context: mapnik/
+      dockerfile: Dockerfile
+    networks:
+      - tms-net
+    depends_on:
+      - geodb
+      - mq
+    volumes:
+      - type: bind
+        source: ./exchange
+        target: /input
+    command: node ./app.js
+    ports:
+      - "127.0.0.1:5000:5000"
+    environment:
+      - DBNAME=osm
+      - PGHOST=geodb
+      - PGPORT=5432
+      - PGUSER=tms
+      - PGPASSWORD=tms
+      - RABBITMQ_HOST=mq
+      - RABBITMQ_DEFAULT_USER=tms
+      - RABBITMQ_DEFAULT_PASS=tms
   frontend:
     build:
       context: frontend/
@@ -72,6 +79,7 @@ services:
     depends_on:
       - mq
       - db
+      - mapnik
     volumes:
       - type: bind
         source: ./files

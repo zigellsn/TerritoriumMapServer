@@ -4,6 +4,7 @@ RUN apt-get update && apt-get install -y \
   libmapnik3.0 \
   libmapnik-dev \
   postgresql-client \
+  netcat \
   && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_USER node
@@ -23,4 +24,4 @@ RUN npm install
 COPY . .
 EXPOSE 5000
 
-CMD [ "node", "./app.js" ]
+ENTRYPOINT ["./scripts/entrypoint.prod.sh"]
