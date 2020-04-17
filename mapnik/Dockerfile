@@ -24,4 +24,4 @@ RUN npm install
 COPY . .
 EXPOSE 5000
 
-ENTRYPOINT ["./scripts/entrypoint.prod.sh"]
+ENTRYPOINT ["./scripts/docker-entrypoint.sh"]
