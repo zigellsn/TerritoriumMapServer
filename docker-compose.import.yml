@@ -5,8 +5,6 @@ services:
     build:
       context: import/
       dockerfile: Dockerfile
-    networks:
-      - tms-net
     depends_on:
       - geodb
     volumes:

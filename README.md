@@ -38,6 +38,8 @@ Copy the file .env.example to .env and adjust to your needs.
 ``` bash
 cp./ frontend/.env.example ./frontend/.env
 ```
+Provide key.pem and crt.pem files in ./nginx/
+
 Then run
 ``` bash
 docker-compose -f docker-compose.yml -f docker-compose.import.yml run import

@@ -2,10 +2,8 @@ version: '3.7'
 services:
   mq:
     image: rabbitmq:3-alpine
-    networks:
-      - tms-net
     ports:
-      - "5672:5672"
+      - "127.0.0.1:5672:5672"
     environment:
       - RABBITMQ_ERLANG_COOKIE='AYMNAPKRPCPJVPFYAJZX'
       - RABBITMQ_DEFAULT_USER=tms
@@ -15,8 +13,6 @@ services:
     build:
       context: db/
       dockerfile: Dockerfile
-    networks:
-      - tms-net
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
@@ -31,12 +27,12 @@ services:
       - PG_MAINTENANCE_WORK_MEM
   db:
     image: postgres:12.2-alpine
-    networks:
-      - tms-net
     volumes:
       - type: bind
         source: ./data
         target: /var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5433:5432"
     environment:
       - POSTGRES_USER=tms
       - POSTGRES_PASSWORD=tms
@@ -46,8 +42,6 @@ services:
     build:
       context: mapnik/
       dockerfile: Dockerfile
-    networks:
-      - tms-net
     depends_on:
       - geodb
       - mq
@@ -73,9 +67,7 @@ services:
     image: "tms/frontend:latest"
     command: python manage.py runserver 0.0.0.0:8000
     ports:
-      - "8000:8000"
-    networks:
-      - tms-net
+      - "127.0.0.1:8000:8000"
     depends_on:
       - mq
       - db
@@ -84,8 +76,3 @@ services:
       - type: bind
         source: ./files
         target: /home/pyuser/files
-
-networks:
-  tms-net:
-    name: "tms-net"
-    driver:  bridge
