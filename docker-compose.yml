@@ -4,10 +4,8 @@ services:
     image: rabbitmq:3-alpine
     ports:
       - "127.0.0.1:5672:5672"
-    environment:
-      - RABBITMQ_ERLANG_COOKIE='AYMNAPKRPCPJVPFYAJZX'
-      - RABBITMQ_DEFAULT_USER=tms
-      - RABBITMQ_DEFAULT_PASS=tms
+    env_file:
+      - frontend/.env
   geodb:
     image: tms/db:1
     build:
@@ -19,12 +17,12 @@ services:
       - type: bind
         source: ./geodata
         target: /var/lib/postgresql/data
+    env_file:
+      - frontend/.env
     environment:
-      - POSTGRES_PASSWORD=tms
-      - POSTGRES_USER=tms
       - POSTGRES_DB=osm
-      - PG_WORK_MEM
-      - PG_MAINTENANCE_WORK_MEM
+      - POSTGRES_USER=tms
+      - POSTGRES_PASSWORD=tms
   db:
     image: postgres:12.2-alpine
     volumes:
@@ -33,10 +31,12 @@ services:
         target: /var/lib/postgresql/data
     ports:
       - "127.0.0.1:5433:5432"
+    env_file:
+      - frontend/.env
     environment:
+      - POSTGRES_DB=tms_frontend_dev
       - POSTGRES_USER=tms
       - POSTGRES_PASSWORD=tms
-      - POSTGRES_DB=tms_frontend_dev
   mapnik:
     image: tms/mapnik:1
     build:
@@ -52,15 +52,8 @@ services:
     command: node ./app.js
     ports:
       - "127.0.0.1:5000:5000"
-    environment:
-      - DBNAME=osm
-      - PGHOST=geodb
-      - PGPORT=5432
-      - PGUSER=tms
-      - PGPASSWORD=tms
-      - RABBITMQ_HOST=mq
-      - RABBITMQ_DEFAULT_USER=tms
-      - RABBITMQ_DEFAULT_PASS=tms
+    env_file:
+      - frontend/.env
   frontend:
     build:
       context: frontend/

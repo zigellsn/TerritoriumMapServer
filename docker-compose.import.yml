@@ -11,13 +11,8 @@ services:
       - type: bind
         source: ./exchange
         target: /input
-    environment:
-      - DBNAME=osm
-      - PGHOST=geodb
-      - PGPORT=5432
-      - PGUSER=tms
-      - PGPASSWORD=tms
-      # - OSM2PGSQL_DATAFILE=...
+    env_file:
+      - frontend/.env
   style:
     image: tms/style:1
     build:
@@ -27,13 +22,8 @@ services:
       - type: bind
         source: ./exchange
         target: /output
-    environment:
-      - STYLE=de
-      - DBNAME=osm
-      - PGHOST=geodb
-      - PGPORT=5432
-      - PGUSER=tms
-      - PGPASSWORD=tms
+    env_file:
+      - frontend/.env
   python-base:
     image: tms/python-base:slim
     build:
