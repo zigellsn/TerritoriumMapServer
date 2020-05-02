@@ -34,12 +34,13 @@ unzip ocean-polygons-reduced-3857.zip
 cd ../..
 ```
 
-Download pbf file and place in ./exchange. Adjust in docker-compose.import.yml environment variable OSM2PGSQL_DATAFILE accordingly.
-
 Copy the file .env.example to .env and adjust to your needs.
 ``` bash
 cp./ frontend/.env.example ./frontend/.env
 ```
+
+Download pbf file and place in ./exchange. Adjust in ./frontend/.env environment variable OSM2PGSQL_DATAFILE accordingly.
+
 Provide key.pem and crt.pem files in ./nginx/
 
 Then run
