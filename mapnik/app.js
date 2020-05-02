@@ -20,14 +20,11 @@ const moment = require("moment");
 const amqp = require('amqplib/callback_api');
 const Renderer = require('./renderer/renderer');
 
-let host = process.env.RABBITMQ_HOST;
-let user = process.env.RABBITMQ_DEFAULT_USER;
-let password = process.env.RABBITMQ_DEFAULT_PASS;
-if (host === undefined || host === '')
-    host = 'localhost';
+let url = process.env.RABBITMQ_URL;
+if (url === undefined || url === '')
+    url = 'amqp://tms:tms@localhost:5672/%2F';
 
-const opt = { credentials: require('amqplib').credentials.plain(user, password) };
-amqp.connect(`amqp://${host}`, opt, function (error0, connection) {
+amqp.connect(url, function (error0, connection) {
     if (error0) {
         throw error0;
     }
