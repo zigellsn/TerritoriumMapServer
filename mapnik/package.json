@@ -1,6 +1,6 @@
 {
   "name": "territoriummaprenderer",
-  "version": "0.0.1",
+  "version": "0.1.0-alpha01",
   "private": true,
   "scripts": {
     "start": "node app.js"

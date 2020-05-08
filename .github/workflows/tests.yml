@@ -27,4 +27,6 @@ jobs:
         pip install -r frontend/requirements/dev.txt
     - name: Run Tests
       run: |
-        python frontend/manage.py test ./frontend --settings=TerritoriumMapServerFrontend.settings.dev
+        python frontend/manage.py test ./frontend
+      env:
+        DJANGO_SETTINGS_MODULE: TerritoriumMapServerFrontend.settings.dev
