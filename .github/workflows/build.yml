@@ -1,9 +1,9 @@
 name: Build CI
 
 on:
-    push:
-      tags:
-        - 'v*'
+  push:
+    tags:
+      - 'v*'
 
 jobs:
   build:
@@ -19,9 +19,9 @@ jobs:
           TAG_REF_NAME: ${{ github.ref }}
       - name: Build project
         run: |
-          mkdir build
-          cd .. && zip -r TerritoriumMapRenderer/build/TerritoriumMapRenderer-${{steps.build_release_info.outputs.version}}.zip TerritoriumMapRenderer -x "TerritoriumMapRenderer/.git/*" "TerritoriumMapRenderer/.github/*" "TerritoriumMapRenderer/.idea/*" "TerritoriumMapRenderer/.gitignore" "TerritoriumMapRenderer/build/*" && cd TerritoriumMapRenderer
-          tar --exclude='.git' --exclude='.github' --exclude='.gitignore' --exclude='.idea' --exclude='build' -cvf build/TerritoriumMapRenderer-${{steps.build_release_info.outputs.version}}.tar ../TerritoriumMapRenderer
+          mkdir dist
+          cd .. && zip -r TerritoriumMapRenderer/dist/TerritoriumMapRenderer-${{steps.build_release_info.outputs.version}}.zip TerritoriumMapRenderer -x "TerritoriumMapRenderer/.git/*" "TerritoriumMapRenderer/.github/*" "TerritoriumMapRenderer/.idea/*" "TerritoriumMapRenderer/.gitignore" "TerritoriumMapRenderer/dist/*" && cd TerritoriumMapRenderer
+          tar --exclude='.git' --exclude='.github' --exclude='.gitignore' --exclude='.idea' --exclude='dist' -cvf dist/TerritoriumMapRenderer-${{steps.build_release_info.outputs.version}}.tar ../TerritoriumMapRenderer
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -39,7 +39,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: build/TerritoriumMapRenderer-${{steps.build_release_info.outputs.version}}.tar
+          asset_path: dist/TerritoriumMapRenderer-${{steps.build_release_info.outputs.version}}.tar
           asset_name: TerritoriumMapRenderer-${{steps.build_release_info.outputs.version}}.tar
           asset_content_type: application/x-tar
       - name: Upload Release Asset
@@ -49,6 +49,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: build/TerritoriumMapRenderer-${{steps.build_release_info.outputs.version}}.zip
+          asset_path: dist/TerritoriumMapRenderer-${{steps.build_release_info.outputs.version}}.zip
           asset_name: TerritoriumMapRenderer-${{steps.build_release_info.outputs.version}}.zip
           asset_content_type: application/zip
