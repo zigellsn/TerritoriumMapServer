@@ -18,7 +18,7 @@
 
 const moment = require("moment");
 const amqp = require('amqplib/callback_api');
-const Renderer = require('./renderer/renderer');
+import './renderer/renderer';
 
 let url = process.env.RABBITMQ_URL;
 if (url === undefined || url === '')
