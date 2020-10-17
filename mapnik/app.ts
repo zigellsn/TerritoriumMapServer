@@ -1,5 +1,4 @@
-/*
- * Copyright 2019-2020 Simon Zigelli
+/* * Copyright 2019-2020 Simon Zigelli
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +15,7 @@
 
 'use strict';
 
-const moment = require("moment");
+const { DateTime } = require("luxon");
 const amqp = require('amqplib/callback_api');
 import './renderer/renderer';
 
@@ -62,9 +61,8 @@ amqp.connect(url, function (error0, connection) {
                 }
                 if (name === '')
                     name = 'map';
-                let now = new Date();
-                let dateString = moment(now).format('YYYYMMDD');
-                let timeString = moment(now).format('HHmmss');
+                let dateString = DateTime.local().format('YYYYMMDD');
+                let timeString = DateTime.local().format('HHmmss');
                 let result = {
                     'job': dict['job'],
                     'payload': buffer,
