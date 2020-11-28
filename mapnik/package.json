@@ -6,12 +6,12 @@
     "start": "node app.ts"
   },
   "dependencies": {
-    "@types/amqplib": "^0.5.14",
+    "@types/amqplib": "^0.5.16",
     "@types/mapnik": "^3.0.1",
-    "@types/node": "^14.11.10",
+    "@types/node": "^14.14.10",
     "amqplib": "^0.6.0",
-    "canvas": "~2.6.1",
-    "mapnik": "^4.5.3",
+    "canvas": "^2.6.1",
+    "mapnik": "^4.5.4",
     "luxon": "^1.25.0",
     "uuid": "^8.3.1"
   }
