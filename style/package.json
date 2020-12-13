@@ -6,7 +6,7 @@
     "start": "node makestyle.js"
   },
   "dependencies": {
-    "js-yaml": "3.14.0",
+    "js-yaml": "3.14.1",
     "carto": "1.2.0"
   }
 }
