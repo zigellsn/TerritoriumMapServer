@@ -1,5 +1,7 @@
 FROM debian:buster-slim
 
+ENV VERSION 1.4.0
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     libboost-system1.67.0 \
@@ -15,10 +17,11 @@ RUN apt-get update \
 
 RUN set -ex \
     && buildDeps=' \
-    git \
     make \
     cmake \
     g++ \
+    wget \
+    ca-certificates \
     libboost-dev \
     libboost-system-dev \
     libboost-filesystem-dev \
@@ -33,9 +36,10 @@ RUN set -ex \
     && apt-get install -y $buildDeps --no-install-recommends \
     && mkdir -p /build \
     && cd /build \
-    && git clone git://github.com/openstreetmap/osm2pgsql.git \
-    && mkdir -p /build/osm2pgsql/build \
-    && cd /build/osm2pgsql/build \
+    && wget https://github.com/openstreetmap/osm2pgsql/archive/${VERSION}.tar.gz \
+    && tar -xvf ${VERSION}.tar.gz \
+    && mkdir -p /build/osm2pgsql-${VERSION}/build \
+    && cd /build/osm2pgsql-${VERSION}/build \
     && cmake .. \
     && make \
     && make install \

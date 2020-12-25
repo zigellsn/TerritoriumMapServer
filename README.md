@@ -9,6 +9,12 @@
 - wget or curl or ...
 
 ## Workflow
+
+Copy the file .env.example to .env and adjust to your needs.
+``` bash
+cp ./frontend/.env.example ./frontend/.env
+```
+
 ``` bash
 mkdir exchange
 mkdir data
@@ -32,11 +38,6 @@ unzip lakes-polygons-reduced-3857.zip
 wget https://tile.openstreetmap.de/shapefiles/ocean-polygons-reduced-3857.zip
 unzip ocean-polygons-reduced-3857.zip
 cd ../..
-```
-
-Copy the file .env.example to .env and adjust to your needs.
-``` bash
-cp./ frontend/.env.example ./frontend/.env
 ```
 
 Download pbf file and place in ./exchange. Adjust in ./frontend/.env environment variable OSM2PGSQL_DATAFILE accordingly.

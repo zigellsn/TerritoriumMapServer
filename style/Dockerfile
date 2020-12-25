@@ -1,7 +1,8 @@
 FROM node:15-buster-slim
 
 RUN apt-get update && apt-get install -y \
-  git \
+  wget \
+  ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_USER node

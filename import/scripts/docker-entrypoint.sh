@@ -38,7 +38,7 @@ if [ "${STYLE:-de}" = 'de' ]; then
     --style /input/hstore-only.style \
     --prefix planet_osm_hstore \
     --tag-transform-script /input/openstreetmap-carto.lua \
-    "${OSM2PGSQL_DATAFILE}"
+    /input/"${OSM2PGSQL_DATAFILE}"
   /input/views_osmde/apply-views.sh "${DBNAME}" "${STYLE:-de}"
 else
   osm2pgsql -v \
@@ -54,5 +54,5 @@ else
     --drop \
     --style /input/openstreetmap-carto.style \
     --tag-transform-script /input/openstreetmap-carto.lua \
-    "${OSM2PGSQL_DATAFILE}"
+    /input/"${OSM2PGSQL_DATAFILE}"
 fi

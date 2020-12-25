@@ -9,7 +9,7 @@ RUN set -ex \
   wget \
   libkakasi2-dev \
   pandoc \
-  postgresql-server-dev-12 \
+  postgresql-server-dev-13 \
   ca-certificates' \
   && apt-get update && apt-get install -y $buildDeps libkakasi2 --no-install-recommends \
   && mkdir -p /build \

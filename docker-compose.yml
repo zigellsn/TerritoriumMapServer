@@ -1,4 +1,4 @@
-version: '3.7'
+version: '3.9'
 services:
   mq:
     image: rabbitmq:3-alpine
@@ -17,26 +17,27 @@ services:
       - type: bind
         source: ./geodata
         target: /var/lib/postgresql/data
-    env_file:
-      - frontend/.env
     environment:
       - POSTGRES_DB=osm
       - POSTGRES_USER=tms
       - POSTGRES_PASSWORD=tms
   db:
-    image: postgres:12.2-alpine
+    image: postgres:13-alpine
     volumes:
       - type: bind
         source: ./data
         target: /var/lib/postgresql/data
     ports:
       - "127.0.0.1:5433:5432"
-    env_file:
-      - frontend/.env
     environment:
       - POSTGRES_DB=tms_frontend_dev
       - POSTGRES_USER=tms
       - POSTGRES_PASSWORD=tms
+  python-base:
+    image: tms/python-base:slim
+    build:
+      context: shapefiles/
+      dockerfile: Dockerfile.python-base
   mapnik:
     image: tms/mapnik:1
     build:
@@ -45,6 +46,7 @@ services:
     depends_on:
       - geodb
       - mq
+      - python-base
     volumes:
       - type: bind
         source: ./exchange
