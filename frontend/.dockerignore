@@ -1,6 +1,0 @@
-.git/
-.idea/
-.gitignore
-.env.example
-.env.docker.example
-shutdown*.*
