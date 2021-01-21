@@ -1,7 +1,5 @@
 # TerritoriumMapServer
 
-![Django CI](https://github.com/zigellsn/TerritoriumMapServer/workflows/Django%20CI/badge.svg)
-
 ## Requirements
 - [Docker](https://www.docker.com/)
 - [Docker Compose](https://github.com/docker/compose)
