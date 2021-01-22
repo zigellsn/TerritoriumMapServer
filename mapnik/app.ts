@@ -15,15 +15,27 @@
 
 'use strict';
 
-const { DateTime } = require("luxon");
-const amqp = require('amqplib/callback_api');
-import './renderer/renderer';
+// import {Renderer} from './renderer/mockRenderer';
+import {Renderer} from './renderer/renderer';
+import {DateTime} from 'luxon';
+import * as amqp from 'amqplib/callback_api';
 
 let url = process.env.RABBITMQ_URL;
 if (url === undefined || url === '')
     url = 'amqp://tms:tms@localhost:5672/%2F';
 
+function sendBuffer(dict, buffer, name: string, dateString, timeString, extension: string, channel, sendQueue: string) {
+    let result = {
+        'job': dict['job'],
+        'payload': buffer,
+        'filename': `${name}_${dateString}_${timeString}.${extension}`
+    };
+    channel.sendToQueue(sendQueue, Buffer.from(JSON.stringify(result)));
+    console.log('Result sent to queue');
+}
+
 amqp.connect(url, function (error0, connection) {
+
     if (error0) {
         throw error0;
     }
@@ -45,7 +57,13 @@ amqp.connect(url, function (error0, connection) {
         let renderer = new Renderer();
         channel.consume(recQueue, function (msg) {
             let payload = msg.content.toString();
-            let dict = JSON.parse(payload);
+            let dict
+            try {
+                dict = JSON.parse(payload)
+            } catch (e) {
+                console.log('Invalid JSON');
+                return;
+            }
             let buffer = renderer.map(dict['payload']['polygon']);
             console.log("Rendering finished");
             if (buffer !== undefined) {
@@ -55,21 +73,24 @@ amqp.connect(url, function (error0, connection) {
                     extension = 'png';
                 else if (dict['payload']['polygon']['mediaType'] === 'image/xml+svg')
                     extension = 'svg';
+                else
+                    extension = 'pdf';
                 let name = '';
                 if (dict['payload']['polygon'].hasOwnProperty('name')) {
                     name = dict['payload']['polygon']['name']['text'];
                 }
                 if (name === '')
                     name = 'map';
-                let dateString = DateTime.local().format('YYYYMMDD');
-                let timeString = DateTime.local().format('HHmmss');
-                let result = {
-                    'job': dict['job'],
-                    'payload': buffer,
-                    'filename': `${name}_${dateString}_${timeString}.${extension}`
-                };
-                channel.sendToQueue(sendQueue, Buffer.from(JSON.stringify(result)));
-                console.log('Result sent to queue');
+                let date = DateTime.local()
+                let dateString = date.toFormat('yyyyMMdd');
+                let timeString = date.toFormat('HHmmss');
+                if (extension === 'pdf') {
+                    renderer.buildPdf(dict['payload']['polygon'], buffer, (_a, buffer, _b) => {
+                        sendBuffer(dict, buffer, name, dateString, timeString, extension, channel, sendQueue);
+                    });
+                } else {
+                    sendBuffer(dict, buffer, name, dateString, timeString, extension, channel, sendQueue);
+                }
             }
         }, {
             noAck: true
