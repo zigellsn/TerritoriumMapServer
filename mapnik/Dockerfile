@@ -1,4 +1,4 @@
-FROM node:15-buster-slim
+FROM node:14-buster-slim
 
 RUN apt-get update && apt-get install -y \
   libmapnik3.0 \
@@ -15,13 +15,18 @@ RUN mkdir $HOME/app && \
 RUN mkdir -p /input
 VOLUME ["/input"]
 WORKDIR $HOME/app
-USER $NODE_USER
 
 COPY package.json ./
-
 RUN npm install
 
+COPY tsconfig.json ./
+
 COPY . .
+
+RUN npm run build
+
+USER $NODE_USER
+
 EXPOSE 5000
 
 ENTRYPOINT ["./scripts/docker-entrypoint.sh"]

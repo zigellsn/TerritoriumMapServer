@@ -3,13 +3,18 @@
   "version": "0.1.0-alpha01",
   "private": true,
   "scripts": {
-    "start": "node app.ts"
+    "start": "node app.js",
+    "build": "tsc -p ."
   },
-  "dependencies": {
+  "devDependencies": {
     "@types/amqplib": "^0.5.17",
     "@types/mapnik": "^3.0.1",
     "@types/pdfmake": "^0.1.16",
     "@types/node": "^14.14.22",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.1.3"
+  },
+  "dependencies": {
     "amqplib": "^0.6.0",
     "canvas": "^2.6.1",
     "mapnik": "^4.5.5",
