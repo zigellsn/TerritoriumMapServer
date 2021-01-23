@@ -16,13 +16,13 @@
 
 'use strict';
 
-import PdfPrinter = require("pdfmake");
 import {v4 as uuidv4} from 'uuid';
+import * as fs from 'fs';
+import {createCanvas, Image} from 'canvas';
+import PdfPrinter = require('pdfmake');
+import {PageSize} from 'pdfmake/interfaces';
 
 const mapnik = require('mapnik');
-
-import * as fs from 'fs';
-import {createCanvas} from 'canvas';
 
 let fontsDirectory = process.env.FONT_DIRECTORY;
 if (fontsDirectory === undefined || fontsDirectory === '')
@@ -208,7 +208,7 @@ export class Renderer {
                     return undefined;
                 }
                 let filename = uuidv4();
-                m.renderFileSync(filename, {format: 'SVG'});
+                m.renderFileSync(filename, {format: 'svg'});
                 src = fs.readFileSync(filename);
                 fs.unlinkSync(filename);
                 src = this.addCopyrightTextVector(src, m.width, m.height);
@@ -242,10 +242,15 @@ export class Renderer {
         }
 
         let docDefinition = {
+            pageSize: 'A4' as PageSize,
             content: [
                 polygon['name'],
                 {
-                    svg: buffer
+                    svg: buffer,
+                    width: polygon['size'][0],
+                    options: {
+                        assumePt: true,
+                    }
                 },
             ]
         };

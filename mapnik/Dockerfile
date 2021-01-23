@@ -7,25 +7,25 @@ RUN apt-get update && apt-get install -y \
   netcat \
   && rm -rf /var/lib/apt/lists/*
 
-ENV NODE_USER node
-ENV HOME /home/$NODE_USER
-RUN mkdir $HOME/app && \
-    chown -R $NODE_USER $HOME/app
-
 RUN mkdir -p /input
 VOLUME ["/input"]
+
+ENV NODE_USER node
+ENV HOME /home/$NODE_USER
+ENV FONT_DIRECTORY $HOME/app/fonts
+RUN mkdir $HOME/app
+
 WORKDIR $HOME/app
-
-COPY package.json ./
-RUN npm install
-
-COPY tsconfig.json ./
 
 COPY . .
 
-RUN npm run build
+RUN chown -R $NODE_USER $HOME/app
 
 USER $NODE_USER
+
+RUN npm install
+
+RUN npm run build
 
 EXPOSE 5000
 
