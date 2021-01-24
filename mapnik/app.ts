@@ -16,7 +16,7 @@
 'use strict';
 
 // import {Renderer} from './renderer/mockRenderer';
-import {Renderer} from './renderer/renderer';
+import {Renderer, RenderError} from './renderer/renderer';
 import {DateTime} from 'luxon';
 import * as amqp from 'amqplib/callback_api';
 
@@ -24,14 +24,36 @@ let url = process.env.RABBITMQ_URL;
 if (url === undefined || url === '')
     url = 'amqp://tms:tms@localhost:5672/%2F';
 
-function sendBuffer(dict, buffer, name: string, dateString, timeString, extension: string, channel, sendQueue: string) {
-    let result = {
-        'job': dict['job'],
-        'payload': buffer,
-        'filename': `${name}_${dateString}_${timeString}.${extension}`
-    };
+function sendBuffer(dict, buffer, fileName: string, error: boolean, channel, sendQueue: string) {
+    let result;
+    let job = 'NO_JOB';
+    if ('job' in dict)
+        job = dict['job'];
+    if (error) {
+        result = {
+            'job': job,
+            'payload': buffer,
+            'error': error
+        };
+    } else {
+        result = {
+            'job': job,
+            'payload': buffer,
+            'filename': fileName,
+            'error': error
+        };
+    }
     channel.sendToQueue(sendQueue, Buffer.from(JSON.stringify(result)));
     console.log('Result sent to queue');
+}
+
+function sendError(dict, message: string, channel, sendQueue: string) {
+    let job = 'NO_JOB';
+    if ('job' in dict)
+        job = dict['job'];
+    let buffer = Buffer.from(message, 'utf-8')
+    sendBuffer(dict, buffer, '', true, channel, sendQueue)
+    console.log(`Job ${job}: ${message}`);
 }
 
 amqp.connect(url, function (error0, connection) {
@@ -61,35 +83,49 @@ amqp.connect(url, function (error0, connection) {
             try {
                 dict = JSON.parse(payload)
             } catch (e) {
-                console.log('Invalid JSON');
+                sendError(dict, 'Invalid JSON', channel, sendQueue);
                 return;
             }
-            let buffer = renderer.map(dict['payload']['polygon']);
+            if (!('payload' in dict) || !('polygon' in dict['payload'])) {
+                sendError(dict, 'No payload or polygon available.', channel, sendQueue);
+                return;
+            }
+            let buffer;
+            try {
+                buffer = renderer.map(dict['payload']['polygon']);
+            } catch (e) {
+                if (e instanceof RenderError) {
+                    sendError(dict, e.message, channel, sendQueue);
+                    return;
+                }
+            }
             console.log("Rendering finished");
             if (buffer !== undefined) {
                 console.log("Buffer valid");
-                let extension = '';
-                if (dict['payload']['polygon']['mediaType'] === 'image/png')
+                let extension;
+                if ('mediaType' in dict['payload']['polygon']
+                    && dict['payload']['polygon']['mediaType'] === 'image/png')
                     extension = 'png';
-                else if (dict['payload']['polygon']['mediaType'] === 'image/xml+svg')
+                else if ('mediaType' in dict['payload']['polygon']
+                    && dict['payload']['polygon']['mediaType'] === 'image/xml+svg')
                     extension = 'svg';
                 else
                     extension = 'pdf';
-                let name = '';
-                if (dict['payload']['polygon'].hasOwnProperty('name')) {
+                let name = 'map';
+                if ('name' in dict['payload']['polygon'] && 'text' in dict['payload']['polygon']['name']
+                    && dict['payload']['polygon']['name']['text'] !== '') {
                     name = dict['payload']['polygon']['name']['text'];
                 }
-                if (name === '')
-                    name = 'map';
                 let date = DateTime.local()
                 let dateString = date.toFormat('yyyyMMdd');
                 let timeString = date.toFormat('HHmmss');
+                let fileName = `${name}_${dateString}_${timeString}.${extension}`;
                 if (extension === 'pdf') {
                     renderer.buildPdf(dict['payload']['polygon'], buffer, (_a, buffer, _b) => {
-                        sendBuffer(dict, buffer, name, dateString, timeString, extension, channel, sendQueue);
+                        sendBuffer(dict, buffer, fileName, false, channel, sendQueue);
                     });
                 } else {
-                    sendBuffer(dict, buffer, name, dateString, timeString, extension, channel, sendQueue);
+                    sendBuffer(dict, buffer, fileName, false, channel, sendQueue);
                 }
             }
         }, {

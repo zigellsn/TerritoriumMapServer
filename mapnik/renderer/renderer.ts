@@ -19,14 +19,23 @@
 import {v4 as uuidv4} from 'uuid';
 import * as fs from 'fs';
 import {createCanvas, Image} from 'canvas';
+import {Margins, PageOrientation, PageSize} from 'pdfmake/interfaces';
 import PdfPrinter = require('pdfmake');
-import {PageSize} from 'pdfmake/interfaces';
 
 const mapnik = require('mapnik');
 
 let fontsDirectory = process.env.FONT_DIRECTORY;
 if (fontsDirectory === undefined || fontsDirectory === '')
     fontsDirectory = 'fonts';
+
+export class RenderError extends Error {
+
+    constructor(public message: string) {
+        super(message);
+        this.name = "RenderError";
+        this.stack = (<any> new Error()).stack;
+    }
+}
 
 export class Renderer {
 
@@ -39,25 +48,6 @@ export class Renderer {
         this.merc = new mapnik.Projection(this.srs);
         mapnik.register_system_fonts();
         mapnik.register_default_input_plugins();
-    }
-
-    // private prepareRenderer(long0, lat0, long1, lat1, imgx, imgy, callback) {
-    //     let map = new mapnik.Map(imgx, imgy);
-    //     map.load('/input/osm-de.xml', (err, map) => {
-    //         let bbox = [long0, lat0, long1, lat1];
-    //         let mercBBox = this.merc.forward(bbox);
-    //         map.zoomToBox(mercBBox);
-    //         callback(map);
-    //     });
-    // }
-
-    private prepareRendererSync(long0, lat0, long1, lat1, imgx, imgy) {
-        let map = new mapnik.Map(imgx, imgy);
-        map.loadSync('/input/osm-de.xml');
-        let bbox = [long0, lat0, long1, lat1];
-        let mercBBox = this.merc.forward(bbox);
-        map.zoomToBox(mercBBox);
-        return map;
     }
 
     private addCopyrightTextRaster(src, width, height) {
@@ -93,6 +83,7 @@ export class Renderer {
             });
             let layer = new mapnik.Layer(`border${i}`, this.srs);
             layer.datasource = ds;
+            let styleName = 'names_style';
             layer.styles = [l['styleName']];
             m.add_layer(layer);
             i++;
@@ -108,24 +99,24 @@ export class Renderer {
         m.add_layer(layer);
     }
 
-    map(polygon /*, size, bbox, way, mediaType, layers, names*/) {
+    map(polygon) {
 
         function createLayers(polygon) {
             let layers = [];
             let globalStyle = '';
-            if (polygon.hasOwnProperty('way') && polygon['way'] !== undefined) {
-                if (polygon.hasOwnProperty('style') && polygon['style'] !== undefined) {
+            if ('way' in polygon && polygon['way'] !== undefined) {
+                if ('style' in polygon && polygon['style'] !== undefined) {
                     globalStyle = polygon['style']['name'];
                 }
                 layers.push({way: polygon['way'], name: polygon['name'], styleName: globalStyle});
             }
-            if (polygon.hasOwnProperty('subpolygon')) {
+            if ('subpolygon' in polygon) {
                 let subPolygons = polygon['subpolygon'];
                 for (const layer of subPolygons) {
-                    if (layer.hasOwnProperty('way') && layer['way'] !== undefined) {
+                    if ('way' in layer && layer['way'] !== undefined) {
                         let style = globalStyle;
-                        if (polygon.hasOwnProperty('style') && polygon['style'] !== undefined) {
-                            style = polygon['style']['name'];
+                        if ('style' in layer && layer['style'] !== undefined) {
+                            style = layer['style']['name'];
                         }
                         layers.push({way: layer['way'], name: layer['name'], styleName: style});
                     }
@@ -136,12 +127,12 @@ export class Renderer {
 
         function createUniqueStyles(polygon) {
             let styles = [];
-            if (polygon.hasOwnProperty('style'))
+            if ('style' in polygon)
                 styles.push(polygon['style']);
-            if (polygon.hasOwnProperty('subpolygon')) {
+            if ('subpolygon' in polygon) {
                 let subPolygons = polygon['subpolygon'];
                 for (const layer of subPolygons) {
-                    if (layer.hasOwnProperty('style'))
+                    if ('style' in layer)
                         styles.push(layer['style'])
                 }
             }
@@ -158,9 +149,12 @@ export class Renderer {
         function getInline(layers) {
             let nameString = 'name,x,y\n';
             for (const layer of layers) {
-                if (!layer.hasOwnProperty('name'))
+                if (!('name' in layer))
                     continue;
-                if (layer['name'].hasOwnProperty('position') && layer['name'].hasOwnProperty('text'))
+                if ('visible' in layer['name'] && layer['name']['visible'] === false) {
+                    continue;
+                }
+                if ('position' in layer['name'] && 'text' in layer['name'])
                     nameString += `"${layer['name']['text']}",${layer['name']['position'][0]},${layer['name']['position'][1]}\n`;
                 else
                     //TODO: PointOnSurface for name position
@@ -176,7 +170,7 @@ export class Renderer {
                 s += `<Style name="${layer.name}">`;
                 s += ` <Rule><LineSymbolizer stroke="${layer.color}" stroke-width="${layer.width}" stroke-opacity="${layer.opacity}"/></Rule>`;
                 s += '</Style>';
-                if (layer.hasOwnProperty('size')) {
+                if ('size' in layer) {
                     textSize = layer['size'];
                 }
             }
@@ -218,16 +212,14 @@ export class Renderer {
             }
             return src;
         } catch (e) {
-            console.log(e);
+            throw new RenderError(e.toString());
         }
     }
 
     buildPdf(polygon, buffer, cb) {
 
         function getDoc(pdfDoc, cb) {
-            // buffer the output
             let chunks = [];
-
             pdfDoc.on('data', (chunk) => {
                 chunks.push(chunk);
             });
@@ -236,18 +228,32 @@ export class Renderer {
                 cb(null, result, pdfDoc._pdfMakePages);
             });
             pdfDoc.on('error', cb);
-
-            // close the stream
             pdfDoc.end();
         }
 
+        let ppi = 72.0;
+        let pageSize = 'A4';
+        let pageOrientation = 'portrait'
+        let pageMargins = [36, 36, 36, 36];
+        if ('page' in polygon && polygon['page'] !== undefined) {
+            if ('ppi' in polygon['page'] && polygon['page']['ppi'] !== undefined)
+                ppi = polygon['page']['ppi'];
+            if ('pageSize' in polygon['page'] && polygon['page']['pageSize'] !== undefined)
+                pageSize = polygon['page']['pageSize'];
+            if ('orientation' in polygon['page'] && polygon['page']['orientation'] !== undefined)
+                pageOrientation = polygon['page']['orientation'];
+            if ('margins' in polygon['page'] && polygon['page']['margins'] !== undefined)
+                pageMargins = polygon['page']['margins'];
+        }
         let docDefinition = {
-            pageSize: 'A4' as PageSize,
+            pageSize: pageSize as PageSize,
+            pageOrientation: pageOrientation as PageOrientation,
+            pageMargins: pageMargins as Margins,
             content: [
                 polygon['name'],
                 {
                     svg: buffer,
-                    width: polygon['size'][0],
+                    width: (polygon['size'][0] / ppi * 72.0),
                     options: {
                         assumePt: true,
                     }
@@ -266,52 +272,4 @@ export class Renderer {
         let pdfDoc = printer.createPdfKitDocument(docDefinition);
         getDoc(pdfDoc, cb)
     }
-
-    // mapLegacy(long0, lat0, long1, lat1, width, height, imgtype) {
-    //
-    //     let z = 1;
-    //     let imgx = width * z;
-    //     let imgy = height * z;
-    //
-    //     try {
-    //         let m = this.prepareRendererSync(long0, lat0, long1, lat1, imgx, imgy);
-    //         let src;
-    //         if (imgtype === 'svg') {
-    //             if (!mapnik.supports.cairo) {
-    //                 console.log('So sad... no Cairo');
-    //                 return undefined;
-    //             }
-    //             let filename = uuidv4();
-    //             m.renderFileSync(filename, {format: imgtype});
-    //             src = fs.readFileSync(filename);
-    //             fs.unlinkSync(filename);
-    //             src = this.addCopyrightTextVector(src, m.width, m.height);
-    //         } else {
-    //             src = m.renderSync({format: imgtype});
-    //             src = this.addCopyrightTextRaster(src, m.width, m.height);
-    //         }
-    //         return src;
-    //     } catch (e) {
-    //         console.log(e);
-    //     }
-    // }
-    //
-    // worldfile(long0, lat0, long1, lat1, width, height) {
-    //
-    //     let z = 1;
-    //     let imgx = width * z;
-    //     let imgy = height * z;
-    //
-    //     try {
-    //         let m = this.prepareRendererSync(long0, lat0, long1, lat1, imgx, imgy);
-    //         if (!m) return;
-    //         let scale = m.scale();
-    //         let extent = m.extent;
-    //         let upper_left_x_center = extent[0] + (scale / 2);
-    //         let upper_left_y_center = extent[3] + (scale / 2);
-    //         return `${scale}\n0\n0\n-${scale}\n${upper_left_x_center}\n${upper_left_y_center}`;
-    //     } catch (e) {
-    //         console.log(e);
-    //     }
-    // }
 }
