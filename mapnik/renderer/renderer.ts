@@ -20,6 +20,7 @@ import {v4 as uuidv4} from 'uuid';
 import * as fs from 'fs';
 import {createCanvas, Image} from 'canvas';
 import {Margins, PageOrientation, PageSize} from 'pdfmake/interfaces';
+import * as turf from '@turf/turf'
 import PdfPrinter = require('pdfmake');
 
 const mapnik = require('mapnik');
@@ -28,12 +29,18 @@ let fontsDirectory = process.env.FONT_DIRECTORY;
 if (fontsDirectory === undefined || fontsDirectory === '')
     fontsDirectory = 'fonts';
 
+let osmStyle = process.env.STYLE;
+if (osmStyle === undefined || osmStyle === '')
+    osmStyle = '/input/osm.xml';
+else if (osmStyle === 'de')
+    osmStyle = '/input/osm-de.xml';
+
 export class RenderError extends Error {
 
     constructor(public message: string) {
         super(message);
         this.name = "RenderError";
-        this.stack = (<any> new Error()).stack;
+        this.stack = (<any>new Error()).stack;
     }
 }
 
@@ -154,11 +161,16 @@ export class Renderer {
                 if ('visible' in layer['name'] && layer['name']['visible'] === false) {
                     continue;
                 }
-                if ('position' in layer['name'] && 'text' in layer['name'])
-                    nameString += `"${layer['name']['text']}",${layer['name']['position'][0]},${layer['name']['position'][1]}\n`;
-                else
-                    //TODO: PointOnSurface for name position
-                    nameString += `"${layer['name']['text']}",,\n`;
+                if ('text' in layer['name']) {
+                    if ('position' in layer['name'])
+                        nameString += `"${layer['name']['text']}",${layer['name']['position'][0]},${layer['name']['position'][1]}\n`;
+                    else {
+                        if ('way' in layer) {
+                            let centroid = turf.centroid(layer['way']);
+                            nameString += `"${layer['name']['text']}",${centroid[0]},${centroid[1]}\n`;
+                        }
+                    }
+                }
             }
             return nameString;
         }
@@ -192,11 +204,11 @@ export class Renderer {
             let inline = getInline(layers);
 
             let m = new mapnik.Map(polygon['size'][0], polygon['size'][1]);
-            m.loadSync('/input/osm-de.xml');
+            m.loadSync(osmStyle);
             m.zoomToBox(polygon['bbox']);
             this.addAdditionalLayers(m, layers, styles, inline);
             let src;
-            if (polygon['mediaType'] === 'image/xml+svg' || polygon['mediaType'] === 'application/pdf') {
+            if (polygon['mediaType'] === 'image/xml+svg') {
                 if (!mapnik.supports.cairo) {
                     console.log('So sad... no Cairo');
                     return undefined;
@@ -207,7 +219,7 @@ export class Renderer {
                 fs.unlinkSync(filename);
                 src = this.addCopyrightTextVector(src, m.width, m.height);
             } else {
-                src = m.renderSync({format: 'PNG'});
+                src = m.renderSync({format: 'png'});
                 src = this.addCopyrightTextRaster(src, m.width, m.height);
             }
             return src;

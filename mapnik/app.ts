@@ -110,7 +110,13 @@ amqp.connect(url, function (error0, connection) {
                     && dict['payload']['polygon']['mediaType'] === 'image/xml+svg')
                     extension = 'svg';
                 else
-                    extension = 'pdf';
+                    extension = 'png';
+                if ('page' in dict['payload']['polygon'] && dict['payload']['polygon']['page'] !== undefined) {
+                    if ('mediaType' in dict['payload']['polygon']['page'] && dict['payload']['polygon']['page']['mediaType'] === 'application/pdf') {
+                        extension = 'pdf';
+                    }
+                }
+
                 let name = 'map';
                 if ('name' in dict['payload']['polygon'] && 'text' in dict['payload']['polygon']['name']
                     && dict['payload']['polygon']['name']['text'] !== '') {
