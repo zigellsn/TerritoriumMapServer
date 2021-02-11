@@ -19,30 +19,16 @@
 import {v4 as uuidv4} from 'uuid';
 import * as fs from 'fs';
 import {createCanvas, Image} from 'canvas';
-import {Margins, PageOrientation, PageSize} from 'pdfmake/interfaces';
 import * as turf from '@turf/turf'
-import PdfPrinter = require('pdfmake');
+import {RenderError} from "./renderError";
 
 const mapnik = require('mapnik');
 
-let fontsDirectory = process.env.FONT_DIRECTORY;
-if (fontsDirectory === undefined || fontsDirectory === '')
-    fontsDirectory = 'fonts';
-
 let osmStyle = process.env.STYLE;
 if (osmStyle === undefined || osmStyle === '')
-    osmStyle = '/input/osm.xml';
+    osmStyle = '/input/osm-de.xml';
 else if (osmStyle === 'de')
     osmStyle = '/input/osm-de.xml';
-
-export class RenderError extends Error {
-
-    constructor(public message: string) {
-        super(message);
-        this.name = "RenderError";
-        this.stack = (<any>new Error()).stack;
-    }
-}
 
 export class Renderer {
 
@@ -90,7 +76,6 @@ export class Renderer {
             });
             let layer = new mapnik.Layer(`border${i}`, this.srs);
             layer.datasource = ds;
-            let styleName = 'names_style';
             layer.styles = [l['styleName']];
             m.add_layer(layer);
             i++;
@@ -219,69 +204,12 @@ export class Renderer {
                 fs.unlinkSync(filename);
                 src = this.addCopyrightTextVector(src, m.width, m.height);
             } else {
-                src = m.renderSync({format: 'png'});
+                src = m.renderSync({format: 'PNG'});
                 src = this.addCopyrightTextRaster(src, m.width, m.height);
             }
             return src;
         } catch (e) {
             throw new RenderError(e.toString());
         }
-    }
-
-    buildPdf(polygon, buffer, cb) {
-
-        function getDoc(pdfDoc, cb) {
-            let chunks = [];
-            pdfDoc.on('data', (chunk) => {
-                chunks.push(chunk);
-            });
-            pdfDoc.on('end', () => {
-                let result = Buffer.concat(chunks);
-                cb(null, result, pdfDoc._pdfMakePages);
-            });
-            pdfDoc.on('error', cb);
-            pdfDoc.end();
-        }
-
-        let ppi = 72.0;
-        let pageSize = 'A4';
-        let pageOrientation = 'portrait'
-        let pageMargins = [36, 36, 36, 36];
-        if ('page' in polygon && polygon['page'] !== undefined) {
-            if ('ppi' in polygon['page'] && polygon['page']['ppi'] !== undefined)
-                ppi = polygon['page']['ppi'];
-            if ('pageSize' in polygon['page'] && polygon['page']['pageSize'] !== undefined)
-                pageSize = polygon['page']['pageSize'];
-            if ('orientation' in polygon['page'] && polygon['page']['orientation'] !== undefined)
-                pageOrientation = polygon['page']['orientation'];
-            if ('margins' in polygon['page'] && polygon['page']['margins'] !== undefined)
-                pageMargins = polygon['page']['margins'];
-        }
-        let docDefinition = {
-            pageSize: pageSize as PageSize,
-            pageOrientation: pageOrientation as PageOrientation,
-            pageMargins: pageMargins as Margins,
-            content: [
-                polygon['name'],
-                {
-                    svg: buffer,
-                    width: (polygon['size'][0] / ppi * 72.0),
-                    options: {
-                        assumePt: true,
-                    }
-                },
-            ]
-        };
-        let fonts = {
-            Roboto: {
-                normal: `${fontsDirectory}/Roboto-Regular.ttf`,
-                bold: `${fontsDirectory}/Roboto-Medium.ttf`,
-                italics: `${fontsDirectory}/Roboto-Italic.ttf`,
-                bolditalics: `${fontsDirectory}/Roboto-MediumItalic.ttf`
-            }
-        };
-        const printer = new PdfPrinter(fonts);
-        let pdfDoc = printer.createPdfKitDocument(docDefinition);
-        getDoc(pdfDoc, cb)
     }
 }
