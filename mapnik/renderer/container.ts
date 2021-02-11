@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {Margins, PageOrientation, PageSize} from "pdfmake/interfaces";
-// import {DateTime} from 'luxon';
+import {Margins, PageOrientation, PageSize, TDocumentDefinitions} from "pdfmake/interfaces";
+import {DateTime} from 'luxon';
 import PdfPrinter = require('pdfmake');
 
 let fontsDirectory = process.env.FONT_DIRECTORY;
@@ -37,13 +37,11 @@ export function buildPdf(page, buffers, cb) {
         pdfDoc.end();
     }
 
-    let ppi = 72.0;
     let pageSize = 'A4';
     let pageOrientation = 'portrait'
     let pageMargins = [36, 36, 36, 36];
     let mediaType = 'image/png';
-    if ('ppi' in page && page['ppi'] !== undefined)
-        ppi = page['ppi'];
+    let pageDecoration = true;
     if ('pageSize' in page && page['pageSize'] !== undefined)
         pageSize = page['pageSize'];
     if ('orientation' in page && page['orientation'] !== undefined)
@@ -52,11 +50,17 @@ export function buildPdf(page, buffers, cb) {
         pageMargins = page['margins'];
     if ('mediaType' in page && page['mediaType'] !== undefined)
         mediaType = page['mediaType'];
+    if ('pageDecoration' in page && page['pageDecoration'] !== undefined)
+        pageDecoration = page['pageDecoration'];
 
     let content = [];
 
     for (const buffer of buffers) {
-        content.push({text: buffer['name']})
+        let ppi = 72.0;
+        if ('ppi' in buffer && buffer['ppi'] !== undefined)
+            ppi = buffer['ppi'];
+        if (pageDecoration)
+            content.push({text: buffer['name']})
         if (mediaType === 'image/xml+svg') {
             content.push({
                 svg: buffer['buffer'],
@@ -69,25 +73,37 @@ export function buildPdf(page, buffers, cb) {
             content.push({
                 image: buffer['buffer'],
                 width: (buffer['size'][0] / ppi * 72.0),
+                options: {
+                    assumePt: true,
+                }
             })
         }
         content.push({text: '\n'})
     }
-    // let date = DateTime.local()
-    // let dateString = date.toFormat('yyyy/MM/dd');
-    // let timeString = date.toFormat('HH:mm:ss');
-    let docDefinition = {
+
+    if (content.length > 1)
+        content.pop();
+
+    let docDefinition: TDocumentDefinitions = {
         pageSize: pageSize as PageSize,
         pageOrientation: pageOrientation as PageOrientation,
         pageMargins: pageMargins as Margins,
-        // footer: {
-        //     margin: [36, 36],
-        //     function(currentPage, pageCount) {
-        //         return currentPage.toString() + ' of ' + pageCount + ' ' + dateString + ' ' + timeString;
-        //     }
-        // },
         content: content
     };
+
+    let date = DateTime.local()
+    let dateString = date.toFormat('yyyy/MM/dd');
+    let timeString = date.toFormat('HH:mm:ss');
+
+    if (pageDecoration)
+        docDefinition.footer = function (currentPage, pageCount) {
+            return {
+                margin: pageMargins as Margins,
+                height: 30,
+                text: currentPage.toString() + ' of ' + pageCount + ' ' + dateString + ' ' + timeString
+            };
+        };
+
     let fonts = {
         Roboto: {
             normal: `${fontsDirectory}/Roboto-Regular.ttf`,

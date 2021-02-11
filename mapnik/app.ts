@@ -15,12 +15,11 @@
 
 'use strict';
 
-// import {Renderer} from './renderer/mockRenderer';
-import {Renderer} from './renderer/renderer';
+import {Renderer} from './renderer/mockRenderer';
+// import {Renderer} from './renderer/renderer';
 import {DateTime} from 'luxon';
 import * as amqp from 'amqplib/callback_api';
 import {buildPdf} from "./renderer/container";
-import {RenderError} from "./renderer/renderError";
 
 let url = process.env.RABBITMQ_URL;
 if (url === undefined || url === '')
@@ -132,6 +131,10 @@ amqp.connect(url, function (error0, connection) {
                             }
                         }
 
+                        let ppi = 72.0;
+                        if ('style' in polygon && 'ppi' in polygon['style'] && polygon['style']['ppi'] !== undefined)
+                            ppi = polygon['style']['ppi'];
+
                         let name = 'map';
                         if ('name' in polygon && 'text' in polygon['name'] && polygon['name']['text'] !== '') {
                             name = polygon['name']['text'];
@@ -145,7 +148,7 @@ amqp.connect(url, function (error0, connection) {
                             fileName = `${name}_${dateString}_${timeString}.${extension}`;
                         buffers.push({
                             name: name, fileName: fileName, buffer: buffer,
-                            size: polygon['size'], mediaType: polygon['mediaType']
+                            size: polygon['size'], mediaType: polygon['mediaType'], ppi: ppi
                         });
                         count++;
                     } else {
@@ -164,10 +167,8 @@ amqp.connect(url, function (error0, connection) {
                     sendBuffer(dict, buffers, false, channel, sendQueue);
                 }
             } catch (e) {
-                if (e instanceof RenderError) {
-                    sendError(dict, e.message, channel, sendQueue);
-                    return;
-                }
+                sendError(dict, e.message, channel, sendQueue);
+                return;
             }
         }, {
             noAck: true
