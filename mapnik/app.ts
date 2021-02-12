@@ -15,8 +15,8 @@
 
 'use strict';
 
-import {Renderer} from './renderer/mockRenderer';
-// import {Renderer} from './renderer/renderer';
+// import {Renderer} from './renderer/mockRenderer';
+import {Renderer} from './renderer/renderer';
 import {DateTime} from 'luxon';
 import * as amqp from 'amqplib/callback_api';
 import {buildPdf} from "./renderer/container";
