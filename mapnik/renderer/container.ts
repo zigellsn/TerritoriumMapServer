@@ -54,28 +54,38 @@ export function buildPdf(page, buffers, cb) {
         pageDecoration = page['pageDecoration'];
 
     let content = [];
-
+    let name = undefined;
+    let keywords = '';
     for (const buffer of buffers) {
         let ppi = 72.0;
         if ('ppi' in buffer && buffer['ppi'] !== undefined)
             ppi = buffer['ppi'];
+        keywords = `${keywords}${buffer['name']}, `;
         if (pageDecoration)
-            content.push({text: buffer['name']})
+            name = {text: buffer['name']}
         if (mediaType === 'image/xml+svg') {
             content.push({
-                svg: buffer['buffer'],
-                width: (buffer['size'][0] / ppi * 72.0),
-                options: {
-                    assumePt: true,
-                }
+                stack: [
+                    name,
+                    {
+                        svg: buffer['buffer'],
+                        width: (buffer['size'][0] / ppi * 72.0),
+                        options: {
+                            assumePt: true,
+                        }
+                    }], unbreakable: true
             })
         } else {
             content.push({
-                image: buffer['buffer'],
-                width: (buffer['size'][0] / ppi * 72.0),
-                options: {
-                    assumePt: true,
-                }
+                stack: [
+                    name,
+                    {
+                        image: buffer['buffer'],
+                        width: (buffer['size'][0] / ppi * 72.0),
+                        options: {
+                            assumePt: true,
+                        }
+                    }], unbreakable: true
             })
         }
         content.push({text: '\n'})
@@ -85,6 +95,12 @@ export function buildPdf(page, buffers, cb) {
         content.pop();
 
     let docDefinition: TDocumentDefinitions = {
+        info: {
+            title: 'Territory Maps',
+            author: 'Territorium Map Server',
+            subject: 'Territory Maps',
+            keywords: keywords.slice(0, -2)
+        },
         pageSize: pageSize as PageSize,
         pageOrientation: pageOrientation as PageOrientation,
         pageMargins: pageMargins as Margins,
@@ -98,10 +114,15 @@ export function buildPdf(page, buffers, cb) {
     if (pageDecoration)
         docDefinition.footer = function (currentPage, pageCount) {
             return {
-                margin: pageMargins as Margins,
-                height: 30,
-                text: currentPage.toString() + ' of ' + pageCount + ' ' + dateString + ' ' + timeString
-            };
+                margin: [pageMargins[0], 0, pageMargins[2], 0],
+                columns: [{
+                    alignment: "left",
+                    text: `${dateString} ${timeString}`,
+                }, {
+                    alignment: "right",
+                    text: `${currentPage.toString()} of ${pageCount.toString()}`
+                }]
+            }
         };
 
     let fonts = {
