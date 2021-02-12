@@ -25,8 +25,7 @@ export class Renderer {
     }
 
     map(polygon) {
-        console.log(path.resolve(__dirname, 'test.png'));
-        if (polygon['mediaType'] === 'image/xml+svg')
+        if (polygon['mediaType'] === 'image/svg+xml')
             return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-52 -53 100 100" stroke-width="2">\n' +
                 ' <g fill="none">\n' +
                 '  <ellipse stroke="#66899a" rx="6" ry="44"/>\n' +

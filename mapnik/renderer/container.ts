@@ -22,9 +22,9 @@ let fontsDirectory = process.env.FONT_DIRECTORY;
 if (fontsDirectory === undefined || fontsDirectory === '')
     fontsDirectory = 'fonts';
 
-export function buildPdf(page, buffers, cb) {
+export function buildPdf(page: Record<any, any>, buffers: Array<any>, cb: (...args: any[]) => void) {
 
-    function getDoc(pdfDoc, cb) {
+    function getDoc(pdfDoc, cb: (...args: any[]) => void) {
         let chunks = [];
         pdfDoc.on('data', (chunk) => {
             chunks.push(chunk);
@@ -48,8 +48,6 @@ export function buildPdf(page, buffers, cb) {
         pageOrientation = page['orientation'];
     if ('margins' in page && page['margins'] !== undefined)
         pageMargins = page['margins'];
-    if ('mediaType' in page && page['mediaType'] !== undefined)
-        mediaType = page['mediaType'];
     if ('pageDecoration' in page && page['pageDecoration'] !== undefined)
         pageDecoration = page['pageDecoration'];
 
@@ -58,12 +56,14 @@ export function buildPdf(page, buffers, cb) {
     let keywords = '';
     for (const buffer of buffers) {
         let ppi = 72.0;
+        if ('mediaType' in buffer && buffer['mediaType'] !== undefined)
+            mediaType = buffer['mediaType'];
         if ('ppi' in buffer && buffer['ppi'] !== undefined)
             ppi = buffer['ppi'];
         keywords = `${keywords}${buffer['name']}, `;
         if (pageDecoration)
             name = {text: buffer['name']}
-        if (mediaType === 'image/xml+svg') {
+        if (mediaType === 'image/svg+xml') {
             content.push({
                 stack: [
                     name,

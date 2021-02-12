@@ -54,7 +54,7 @@ export class Renderer {
         img.src = src;
         ctx.font = '10px DejaVu Sans Book';
         let text = ctx.measureText(this.copyright);
-        ctx.fillText(this.copyright, 10, height - text.emHeightAscent - 10);
+        ctx.fillText(this.copyright, 10, height - text.emHeightAscent);
         return canvas.toBuffer();
     }
 
@@ -193,7 +193,7 @@ export class Renderer {
             m.zoomToBox(polygon['bbox']);
             this.addAdditionalLayers(m, layers, styles, inline);
             let src;
-            if (polygon['mediaType'] === 'image/xml+svg') {
+            if (polygon['mediaType'] === 'image/svg+xml') {
                 if (!mapnik.supports.cairo) {
                     console.log('So sad... no Cairo');
                     return undefined;

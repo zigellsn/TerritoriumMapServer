@@ -15,8 +15,8 @@
 
 'use strict';
 
-// import {Renderer} from './renderer/mockRenderer';
-import {Renderer} from './renderer/renderer';
+import {Renderer} from './renderer/mockRenderer';
+// import {Renderer} from './renderer/renderer';
 import {DateTime} from 'luxon';
 import * as amqp from 'amqplib/callback_api';
 import {buildPdf} from "./renderer/container";
@@ -25,12 +25,13 @@ let url = process.env.RABBITMQ_URL;
 if (url === undefined || url === '')
     url = 'amqp://tms:tms@localhost:5672/%2F?connection_attempts=10&retry_delay=5.0';
 
-function sendBuffer(dict, buffers: Array<any>, error: boolean, channel, sendQueue: string) {
+function sendBuffer(dict: Record<any, any>, buffers: Array<any>, error: boolean, channel: amqp.Channel, sendQueue: string) {
     let result;
     let job = 'NO_JOB';
     if ('job' in dict)
         job = dict['job'];
     for (const buffer of buffers) {
+        let payload: Buffer = undefined;
         if (error) {
             result = {
                 'job': job,
@@ -38,9 +39,13 @@ function sendBuffer(dict, buffers: Array<any>, error: boolean, channel, sendQueu
                 'error': error
             };
         } else {
+            if (buffer['mediaType'] === 'image/svg+xml')
+                payload = Buffer.from(buffer['buffer'], 'utf-8');
+            else
+                payload = buffer['buffer']
             result = {
                 'job': job,
-                'payload': buffer['buffer'],
+                'payload': payload,
                 'filename': buffer['fileName'],
                 'mediaType': buffer['mediaType'],
                 'error': error
@@ -51,7 +56,7 @@ function sendBuffer(dict, buffers: Array<any>, error: boolean, channel, sendQueu
     console.log('Result sent to queue');
 }
 
-function sendError(dict, message: string, channel, sendQueue: string) {
+function sendError(dict: Record<any, any>, message: string, channel: amqp.Channel, sendQueue: string) {
     let job = 'NO_JOB';
     if ('job' in dict)
         job = dict['job'];
@@ -103,33 +108,33 @@ amqp.connect(url, function (error0, connection) {
             let timeString = date.toFormat('HHmmss');
             try {
                 let page = undefined;
-                if ('page' in dict['payload'] && dict['payload']['page'] !== undefined)
-                    page = dict['payload']['page'];
-
+                let extension = undefined;
                 let polygons = [];
+                let count = 0;
+
+                if ('page' in dict['payload'] && dict['payload']['page'] !== undefined) {
+                    page = dict['payload']['page'];
+                    if ('mediaType' in page && page['mediaType'] === 'application/pdf') {
+                        extension = 'pdf';
+                    }
+                }
                 if (!(dict['payload']['polygon'] instanceof Array))
                     polygons.push(dict['payload']['polygon']);
                 else
                     polygons = dict['payload']['polygon'];
 
-                let count = 0;
                 for (const polygon of polygons) {
                     let buffer = renderer.map(polygon);
                     console.log("Rendering finished");
                     if (buffer !== undefined) {
                         console.log("Buffer valid");
-                        let extension;
-                        if ('mediaType' in polygon && polygon['mediaType'] === 'image/png')
-                            extension = 'png';
-                        else if ('mediaType' in polygon && polygon['mediaType'] === 'image/xml+svg')
-                            extension = 'svg';
-                        else
-                            extension = 'png';
-                        if (page !== undefined) {
-                            if ('mediaType' in page && page['mediaType'] === 'application/pdf') {
-                                extension = 'pdf';
-                            }
-                        }
+                        if (page === undefined)
+                            if ('mediaType' in polygon && polygon['mediaType'] === 'image/png')
+                                extension = 'png';
+                            else if ('mediaType' in polygon && polygon['mediaType'] === 'image/svg+xml')
+                                extension = 'svg';
+                            else
+                                extension = 'png';
 
                         let ppi = 72.0;
                         if ('style' in polygon && 'ppi' in polygon['style'] && polygon['style']['ppi'] !== undefined)
@@ -156,13 +161,17 @@ amqp.connect(url, function (error0, connection) {
                     }
                 }
                 if (page !== undefined) {
-                    buildPdf(page, buffers, (_a, buffer, _b) => {
-                        let buffers = [{
-                            fileName: `map_${dateString}_${timeString}.pdf`,
-                            buffer: buffer, mediaType: 'application/pdf'
-                        }]
-                        sendBuffer(dict, buffers, false, channel, sendQueue);
-                    });
+                    if (page['mediaType'] === 'application/pdf')
+                        buildPdf(page, buffers, (_a, buffer, _b) => {
+                            let buffers = [{
+                                fileName: `map_${dateString}_${timeString}.pdf`,
+                                buffer: buffer, mediaType: 'application/pdf'
+                            }]
+                            sendBuffer(dict, buffers, false, channel, sendQueue);
+                        });
+                    else {
+                        //TODO: xhtml-Export
+                    }
                 } else {
                     sendBuffer(dict, buffers, false, channel, sendQueue);
                 }
