@@ -1,4 +1,4 @@
-FROM postgis/postgis:13-3.0
+FROM postgis/postgis:13-3.1
 
 RUN set -ex \
   && buildDeps=' \

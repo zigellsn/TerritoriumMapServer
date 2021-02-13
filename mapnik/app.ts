@@ -20,12 +20,13 @@ import {Renderer} from './renderer/renderer';
 import {DateTime} from 'luxon';
 import * as amqp from 'amqplib/callback_api';
 import {buildPdf} from "./renderer/container";
+import {Message} from "amqplib/callback_api";
 
 let url = process.env.RABBITMQ_URL;
 if (url === undefined || url === '')
     url = 'amqp://tms:tms@localhost:5672/%2F?connection_attempts=10&retry_delay=5.0';
 
-function sendBuffer(dict: Record<any, any>, buffers: Array<any>, error: boolean, channel: amqp.Channel, sendQueue: string) {
+function sendBuffer(dict: Record<any, any>, buffers: Array<any>, error: boolean, channel: amqp.Channel, sendQueue: string, msg: Message) {
     let result;
     let job = 'NO_JOB';
     if ('job' in dict)
@@ -52,16 +53,18 @@ function sendBuffer(dict: Record<any, any>, buffers: Array<any>, error: boolean,
             };
         }
         channel.sendToQueue(sendQueue, Buffer.from(JSON.stringify(result)));
+        channel.ack(msg);
+        console.log(`ACK message ${msg.fields.deliveryTag}`);
     }
     console.log('Result sent to queue');
 }
 
-function sendError(dict: Record<any, any>, message: string, channel: amqp.Channel, sendQueue: string) {
+function sendError(dict: Record<any, any>, message: string, channel: amqp.Channel, sendQueue: string, msg: Message) {
     let job = 'NO_JOB';
     if ('job' in dict)
         job = dict['job'];
     let buffers = [Buffer.from(message, 'utf-8')]
-    sendBuffer(dict, buffers, true, channel, sendQueue)
+    sendBuffer(dict, buffers, true, channel, sendQueue, msg)
     console.error(`Job ${job}: ${message}`);
 }
 
@@ -87,6 +90,7 @@ amqp.connect(url, function (error0, connection) {
             durable: false
         });
 
+        channel.prefetch(1);
         let renderer = new Renderer();
         channel.consume(recQueue, function (msg) {
             let payload = msg.content.toString();
@@ -94,11 +98,11 @@ amqp.connect(url, function (error0, connection) {
             try {
                 dict = JSON.parse(payload)
             } catch (e) {
-                sendError(dict, 'Invalid JSON', channel, sendQueue);
+                sendError(dict, 'Invalid JSON', channel, sendQueue, msg);
                 return;
             }
             if (!('payload' in dict) || !('polygon' in dict['payload'])) {
-                sendError(dict, 'No payload or polygon available.', channel, sendQueue);
+                sendError(dict, 'No payload or polygon available.', channel, sendQueue, msg);
                 return;
             }
 
@@ -157,7 +161,7 @@ amqp.connect(url, function (error0, connection) {
                         });
                         count++;
                     } else {
-                        sendError(dict, 'Buffer invalid', channel, sendQueue);
+                        sendError(dict, 'Buffer invalid', channel, sendQueue, msg);
                     }
                 }
                 if (page !== undefined) {
@@ -167,20 +171,18 @@ amqp.connect(url, function (error0, connection) {
                                 fileName: `map_${dateString}_${timeString}.pdf`,
                                 buffer: buffer, mediaType: 'application/pdf'
                             }]
-                            sendBuffer(dict, buffers, false, channel, sendQueue);
+                            sendBuffer(dict, buffers, false, channel, sendQueue, msg);
                         });
                     else {
                         //TODO: xhtml-Export
                     }
                 } else {
-                    sendBuffer(dict, buffers, false, channel, sendQueue);
+                    sendBuffer(dict, buffers, false, channel, sendQueue, msg);
                 }
             } catch (e) {
-                sendError(dict, e.message, channel, sendQueue);
+                sendError(dict, e.message, channel, sendQueue, msg);
                 return;
             }
-        }, {
-            noAck: true
         });
     });
 });
