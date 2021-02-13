@@ -31,6 +31,8 @@ function sendBuffer(dict: Record<any, any>, buffers: Array<any>, error: boolean,
     let job = 'NO_JOB';
     if ('job' in dict)
         job = dict['job'];
+    channel.ack(msg);
+    console.log(`ACK message ${msg.fields.deliveryTag}`);
     for (const buffer of buffers) {
         let payload: Buffer = undefined;
         if (error) {
@@ -53,8 +55,6 @@ function sendBuffer(dict: Record<any, any>, buffers: Array<any>, error: boolean,
             };
         }
         channel.sendToQueue(sendQueue, Buffer.from(JSON.stringify(result)));
-        channel.ack(msg);
-        console.log(`ACK message ${msg.fields.deliveryTag}`);
     }
     console.log('Result sent to queue');
 }

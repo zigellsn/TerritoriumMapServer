@@ -60,7 +60,7 @@ export class Renderer {
 
     private addCopyrightTextVector(src, _width, height) {
         let len = src.length;
-        return `${src.slice(0, len - 7)}<text fill="#0" font-size="10" font-family="sans-serif" x="10" y="${height - 32}"><tspan dy="18.2" x="10">${this.copyright}</tspan></text>${src.slice(len - 7, len)}`;
+        return `${src.slice(0, len - 7)}<text fill="#0" font-size="10" font-family="sans-serif" x="10" y="${height - 24}"><tspan dy="18.2" x="10">${this.copyright}</tspan></text>${src.slice(len - 7, len)}`;
     }
 
     private addAdditionalLayers(m, layers, styles, inline) {
