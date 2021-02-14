@@ -16,6 +16,8 @@
 
 'use strict';
 
+import {createLayers, createStyles, createUniqueStyles, getInline} from "./utils";
+
 const fs = require('fs');
 const path = require('path');
 
@@ -25,6 +27,16 @@ export class Renderer {
     }
 
     map(polygon) {
+        let layers = createLayers(polygon);
+        let uniqueStyles = createUniqueStyles(polygon);
+        let styles = createStyles(uniqueStyles);
+        let inline = getInline(layers);
+
+        console.log(layers);
+        console.log(uniqueStyles);
+        console.log(styles);
+        console.log(inline);
+
         if (polygon['mediaType'] === 'image/svg+xml')
             return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-52 -53 100 100" stroke-width="2">\n' +
                 ' <g fill="none">\n' +
