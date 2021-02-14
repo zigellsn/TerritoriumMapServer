@@ -71,3 +71,6 @@ services:
       - type: bind
         source: ./files
         target: /home/pyuser/files
+      - type: bind
+        source: ./exchange
+        target: /input

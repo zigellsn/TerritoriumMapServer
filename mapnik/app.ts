@@ -19,12 +19,18 @@
 import {Renderer} from './renderer/renderer';
 import {DateTime} from 'luxon';
 import * as amqp from 'amqplib/callback_api';
+import {Message} from 'amqplib/callback_api';
 import {buildPdf} from "./renderer/container";
-import {Message} from "amqplib/callback_api";
+import {v4 as uuidv4} from 'uuid';
+import * as fs from 'fs';
 
 let url = process.env.RABBITMQ_URL;
 if (url === undefined || url === '')
     url = 'amqp://tms:tms@localhost:5672/%2F?connection_attempts=10&retry_delay=5.0';
+
+let dir = process.env.EXCHANGE_DIR;
+if (dir === undefined || dir === '')
+    dir = '/input/';
 
 function sendBuffer(dict: Record<any, any>, buffers: Array<any>, error: boolean, channel: amqp.Channel, sendQueue: string, msg: Message) {
     let result;
@@ -34,25 +40,40 @@ function sendBuffer(dict: Record<any, any>, buffers: Array<any>, error: boolean,
     channel.ack(msg);
     console.log(`ACK message ${msg.fields.deliveryTag}`);
     for (const buffer of buffers) {
-        let payload: Buffer = undefined;
         if (error) {
             result = {
                 'job': job,
-                'payload': buffer['buffer'],
+                'payload': buffer,
                 'error': error
             };
         } else {
+            let fileContent: Buffer = undefined;
+            let payload = uuidv4();
+
             if (buffer['mediaType'] === 'image/svg+xml')
-                payload = Buffer.from(buffer['buffer'], 'utf-8');
+                fileContent = Buffer.from(buffer['buffer'], 'utf-8');
             else
-                payload = buffer['buffer']
-            result = {
-                'job': job,
-                'payload': payload,
-                'filename': buffer['fileName'],
-                'mediaType': buffer['mediaType'],
-                'error': error
-            };
+                fileContent = buffer['buffer']
+
+            try{
+                fs.writeFileSync(`${dir}${payload}`, fileContent);
+            } catch (e) {
+                let message = 'Error writing file'
+                result = {
+                    'job': job,
+                    'payload': message,
+                    'error': true
+                };
+                console.log(message);
+            } finally {
+                result = {
+                    'job': job,
+                    'payload': payload,
+                    'filename': buffer['fileName'],
+                    'mediaType': buffer['mediaType'],
+                    'error': error
+                };
+            }
         }
         channel.sendToQueue(sendQueue, Buffer.from(JSON.stringify(result)));
     }
@@ -63,8 +84,7 @@ function sendError(dict: Record<any, any>, message: string, channel: amqp.Channe
     let job = 'NO_JOB';
     if ('job' in dict)
         job = dict['job'];
-    let buffers = [Buffer.from(message, 'utf-8')]
-    sendBuffer(dict, buffers, true, channel, sendQueue, msg)
+    sendBuffer(dict, [message], true, channel, sendQueue, msg)
     console.error(`Job ${job}: ${message}`);
 }
 
