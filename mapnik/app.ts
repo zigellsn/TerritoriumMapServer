@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-'use strict';
-
 // import {Renderer} from './renderer/mockRenderer';
 import {Renderer} from './renderer/renderer';
 import {DateTime} from 'luxon';
@@ -23,6 +21,9 @@ import {Message} from 'amqplib/callback_api';
 import {buildPdf} from "./renderer/container";
 import {v4 as uuidv4} from 'uuid';
 import * as fs from 'fs';
+import {Territorium} from "./index";
+import Polygon = Territorium.Polygon;
+import ResultBuffer = Territorium.ResultBuffer;
 
 let url = process.env.RABBITMQ_URL;
 if (url === undefined || url === '')
@@ -32,47 +33,42 @@ let dir = process.env.EXCHANGE_DIR;
 if (dir === undefined || dir === '')
     dir = '/input/';
 
-function sendBuffer(dict: Record<any, any>, buffers: Array<any>, error: boolean, channel: amqp.Channel, sendQueue: string, msg: Message) {
-    let result;
+let renderer = new Renderer();
+
+function sendBuffer(dict: Territorium.Job, buffers: Array<Territorium.ResultBuffer>, error: boolean, channel: amqp.Channel, sendQueue: string, msg: Message) {
+    let result: Territorium.Result = new class implements Territorium.Result {
+        error: boolean;
+        filename: string | undefined;
+        job: string;
+        mediaType: string | undefined;
+        payload: string;
+    };
     let job = 'NO_JOB';
-    if ('job' in dict)
-        job = dict['job'];
+    if (dict.job !== undefined)
+        job = dict.job;
     channel.ack(msg);
     console.log(`ACK message ${msg.fields.deliveryTag}`);
     for (const buffer of buffers) {
         if (error) {
-            result = {
-                'job': job,
-                'payload': buffer,
-                'error': error
-            };
+            result.job = job;
+            result.payload = buffer.message;
+            result.error = error;
         } else {
-            let fileContent: Buffer = undefined;
             let payload = uuidv4();
-
-            if (buffer['mediaType'] === 'image/svg+xml')
-                fileContent = Buffer.from(buffer['buffer'], 'utf-8');
-            else
-                fileContent = buffer['buffer']
-
-            try{
-                fs.writeFileSync(`${dir}${payload}`, fileContent);
+            try {
+                fs.writeFileSync(`${dir}${payload}`, buffer.buffer);
             } catch (e) {
-                let message = 'Error writing file'
-                result = {
-                    'job': job,
-                    'payload': message,
-                    'error': true
-                };
+                let message = 'Error writing file';
+                result.job = job;
+                result.payload = message;
+                result.error = true;
                 console.log(message);
             } finally {
-                result = {
-                    'job': job,
-                    'payload': payload,
-                    'filename': buffer['fileName'],
-                    'mediaType': buffer['mediaType'],
-                    'error': error
-                };
+                result.job = job;
+                result.payload = payload;
+                result.filename = buffer.fileName;
+                result.mediaType = buffer.mediaType;
+                result.error = error;
             }
         }
         channel.sendToQueue(sendQueue, Buffer.from(JSON.stringify(result)));
@@ -80,11 +76,19 @@ function sendBuffer(dict: Record<any, any>, buffers: Array<any>, error: boolean,
     console.log('Result sent to queue');
 }
 
-function sendError(dict: Record<any, any>, message: string, channel: amqp.Channel, sendQueue: string, msg: Message) {
+function sendError(dict: Territorium.Job, message: string, channel: amqp.Channel, sendQueue: string, msg: Message) {
     let job = 'NO_JOB';
-    if ('job' in dict)
-        job = dict['job'];
-    sendBuffer(dict, [message], true, channel, sendQueue, msg)
+    if (dict.job !== undefined)
+        job = dict.job;
+    sendBuffer(dict, [{
+        message: message,
+        buffer: undefined,
+        fileName: undefined,
+        mediaType: undefined,
+        size: undefined,
+        name: undefined,
+        ppi: undefined
+    }], true, channel, sendQueue, msg)
     console.error(`Job ${job}: ${message}`);
 }
 
@@ -111,41 +115,40 @@ amqp.connect(url, function (error0, connection) {
         });
 
         channel.prefetch(1);
-        let renderer = new Renderer();
         channel.consume(recQueue, function (msg) {
             let payload = msg.content.toString();
-            let dict
+            let dict: Territorium.Job
             try {
                 dict = JSON.parse(payload)
             } catch (e) {
                 sendError(dict, 'Invalid JSON', channel, sendQueue, msg);
                 return;
             }
-            if (!('payload' in dict) || !('polygon' in dict['payload'])) {
+            if (dict.payload === undefined || dict.payload.polygon === undefined) {
                 sendError(dict, 'No payload or polygon available.', channel, sendQueue, msg);
                 return;
             }
 
-            let buffers = [];
+            let buffers: Array<Territorium.ResultBuffer> = [];
             let date = DateTime.local()
             let dateString = date.toFormat('yyyyMMdd');
             let timeString = date.toFormat('HHmmss');
             try {
-                let page = undefined;
-                let extension = undefined;
-                let polygons = [];
+                let page: Territorium.Page = undefined;
+                let extension: string = undefined;
+                let polygons: Array<Polygon> = [];
                 let count = 0;
 
-                if ('page' in dict['payload'] && dict['payload']['page'] !== undefined) {
-                    page = dict['payload']['page'];
-                    if ('mediaType' in page && page['mediaType'] === 'application/pdf') {
+                if (dict.payload.page !== undefined) {
+                    page = dict.payload.page;
+                    if (page.mediaType === 'application/pdf') {
                         extension = 'pdf';
                     }
                 }
-                if (!(dict['payload']['polygon'] instanceof Array))
-                    polygons.push(dict['payload']['polygon']);
+                if (!(dict.payload.polygon instanceof Array))
+                    polygons.push(dict.payload.polygon);
                 else
-                    polygons = dict['payload']['polygon'];
+                    polygons = dict.payload.polygon;
 
                 for (const polygon of polygons) {
                     let buffer = renderer.map(polygon);
@@ -153,22 +156,22 @@ amqp.connect(url, function (error0, connection) {
                     if (buffer !== undefined) {
                         console.log("Buffer valid");
                         if (page === undefined)
-                            if ('mediaType' in polygon && polygon['mediaType'] === 'image/png')
+                            if (polygon.mediaType !== undefined && polygon.mediaType === 'image/png')
                                 extension = 'png';
-                            else if ('mediaType' in polygon && polygon['mediaType'] === 'image/svg+xml')
+                            else if (polygon.mediaType !== undefined && polygon.mediaType === 'image/svg+xml')
                                 extension = 'svg';
                             else
                                 extension = 'png';
 
                         let ppi = 72.0;
-                        if ('style' in polygon && 'ppi' in polygon['style'] && polygon['style']['ppi'] !== undefined)
-                            ppi = polygon['style']['ppi'];
+                        if (polygon.style !== undefined && polygon.style.ppi !== undefined)
+                            ppi = polygon.style.ppi;
 
                         let name = 'map';
-                        if ('name' in polygon && 'text' in polygon['name'] && polygon['name']['text'] !== '') {
-                            name = polygon['name']['text'];
+                        if (polygon.name !== undefined && polygon.name.text !== undefined && polygon.name.text !== '') {
+                            name = polygon.name.text;
                         }
-                        let fileName;
+                        let fileName: string;
                         if (polygons.length <= 1)
                             fileName = `${name}_${dateString}_${timeString}.${extension}`;
                         else if (name == 'map')
@@ -176,8 +179,8 @@ amqp.connect(url, function (error0, connection) {
                         else
                             fileName = `${name}_${dateString}_${timeString}.${extension}`;
                         buffers.push({
-                            name: name, fileName: fileName, buffer: buffer,
-                            size: polygon['size'], mediaType: polygon['mediaType'], ppi: ppi
+                            name: name, fileName: fileName, buffer: buffer, message: '',
+                            size: polygon.size, mediaType: polygon.mediaType, ppi: ppi
                         });
                         count++;
                     } else {
@@ -185,11 +188,16 @@ amqp.connect(url, function (error0, connection) {
                     }
                 }
                 if (page !== undefined) {
-                    if (page['mediaType'] === 'application/pdf')
+                    if (page.mediaType === 'application/pdf')
                         buildPdf(page, buffers, (_a, buffer, _b) => {
-                            let buffers = [{
+                            let buffers: Array<ResultBuffer> = [{
                                 fileName: `map_${dateString}_${timeString}.pdf`,
-                                buffer: buffer, mediaType: 'application/pdf'
+                                buffer: buffer,
+                                message: '',
+                                mediaType: 'application/pdf',
+                                name: undefined,
+                                ppi: undefined,
+                                size: undefined
                             }]
                             sendBuffer(dict, buffers, false, channel, sendQueue, msg);
                         });

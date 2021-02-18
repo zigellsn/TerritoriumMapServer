@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-'use strict';
-
-import {createLayers, createStyles, createUniqueStyles, getInline} from "./utils";
+import {createLayers, createStyles, createTextStyle, createUniqueStyles, getInline} from "./utils";
+import {Territorium} from "../index";
 
 const fs = require('fs');
 const path = require('path');
@@ -26,19 +25,20 @@ export class Renderer {
         console.log('Ready');
     }
 
-    map(polygon) {
+    map(polygon: Territorium.Polygon): Buffer {
         let layers = createLayers(polygon);
         let uniqueStyles = createUniqueStyles(polygon);
-        let styles = createStyles(uniqueStyles);
+        let lineStyles = createStyles(uniqueStyles);
+        let textStyles = createTextStyle(polygon);
         let inline = getInline(layers);
-
+        let styles = `<Map>${lineStyles}${textStyles}</Map>`
         console.log(layers);
         console.log(uniqueStyles);
         console.log(styles);
         console.log(inline);
 
-        if (polygon['mediaType'] === 'image/svg+xml')
-            return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-52 -53 100 100" stroke-width="2">\n' +
+        if (polygon.mediaType === 'image/svg+xml')
+            return Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" viewBox="-52 -53 100 100" stroke-width="2">\n' +
                 ' <g fill="none">\n' +
                 '  <ellipse stroke="#66899a" rx="6" ry="44"/>\n' +
                 '  <ellipse stroke="#e1d85d" rx="6" ry="44" transform="rotate(-66)"/>\n' +
@@ -51,8 +51,8 @@ export class Renderer {
                 '  <circle cx="-40" cy="18" r="9"/>\n' +
                 '  <circle cx="40" cy="18" r="9"/>\n' +
                 ' </g>\n' +
-                '</svg>\n'
+                '</svg>\n', 'utf-8');
         else
-            return fs.readFileSync(path.resolve(__dirname, 'testmap.png'))
+            return fs.readFileSync(path.resolve(__dirname, 'testmap.png'));
     }
 }

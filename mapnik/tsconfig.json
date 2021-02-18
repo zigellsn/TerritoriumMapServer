@@ -1,11 +1,15 @@
 {
-    "compilerOptions": {
-        "allowJs": true,
-        "target": "es5",
-        "module": "CommonJS",
-        "skipLibCheck": true,
-    },
-    "include": [
-        "./app.ts"
-    ]
+  "compilerOptions": {
+    "allowJs": true,
+    "target": "es5",
+    "module": "CommonJS",
+    "skipLibCheck": true,
+    "alwaysStrict": true
+  },
+  "include": [
+    "./app.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

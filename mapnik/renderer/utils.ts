@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-'use strict';
-
 import {createCanvas, Image} from "canvas";
 import * as turf from "@turf/turf";
+import {Territorium} from "../index";
 
 const copyright = '© OpenStreetMap contributors';
 
@@ -41,58 +40,69 @@ export function addCopyrightTextVector(src: string, _width: number, height: numb
     return `${src.slice(0, len - 7)}<text fill="#0" font-size="10" font-family="sans-serif" x="10" y="${height - 24}"><tspan dy="18.2" x="10">${copyright}</tspan></text>${src.slice(len - 7, len)}`;
 }
 
-export function createLayers(polygon): Array<any> {
-    let layers = [];
+export function createLayers(polygon: Territorium.Polygon): Array<Territorium.Layer> {
+    let layers: Array<Territorium.Layer> = [];
     let globalStyle = 'defaultStyle';
-    if ('style' in polygon && polygon['style'] !== undefined) {
-        if (polygon['style']['name'] === 'defaultStyle') {
+    if (polygon.style !== undefined && polygon.style.name !== undefined) {
+        if (polygon.style.name === 'defaultStyle') {
             globalStyle = '_defaultStyle_';
         } else {
-            globalStyle = polygon['style']['name'];
+            globalStyle = polygon.style.name;
         }
     }
-    if ('way' in polygon && polygon['way'] !== undefined) {
-        layers.push({way: polygon['way'], name: polygon['name'], styleName: globalStyle});
+    if (polygon.way !== undefined) {
+        layers.push({way: polygon.way, name: polygon.name, styleName: globalStyle});
     }
-    if ('subpolygon' in polygon && polygon['subpolygon'] !== undefined) {
-        let subPolygons = polygon['subpolygon'];
+    if (polygon.subpolygon !== undefined) {
+
+        let subPolygons: Array<Territorium.SubPolygon> = []
+        if (polygon.subpolygon instanceof Array)
+            subPolygons = polygon.subpolygon;
+        else
+            subPolygons.push(polygon.subpolygon)
+
         for (const layer of subPolygons) {
-            if ('way' in layer && layer['way'] !== undefined) {
+            if (layer.way !== undefined) {
                 let style = globalStyle;
-                if ('style' in layer && layer['style'] !== undefined) {
-                    style = layer['style']['name'];
+                if (layer.style !== undefined && layer.style.name !== undefined) {
+                    style = layer.style.name;
                 }
-                layers.push({way: layer['way'], name: layer['name'], styleName: style});
+                layers.push({way: layer.way, name: layer.name, styleName: style});
             }
         }
     }
     return layers;
 }
 
-export function createUniqueStyles(polygon): Array<any> {
-    let styles = [];
-    if ('style' in polygon && polygon['style'] !== undefined)
-        styles.push(polygon['style']);
-    if ('subpolygon' in polygon && polygon['subpolygon'] !== undefined) {
-        let subPolygons = polygon['subpolygon'];
+export function createUniqueStyles(polygon: Territorium.Polygon): Array<Territorium.Style> {
+    let styles: Array<Territorium.Style> = [];
+    if (polygon.style !== undefined)
+        styles.push(polygon.style);
+    if (polygon.subpolygon !== undefined) {
+
+        let subPolygons: Array<Territorium.SubPolygon> = []
+        if (polygon.subpolygon instanceof Array)
+            subPolygons = polygon.subpolygon;
+        else
+            subPolygons.push(polygon.subpolygon)
+
         for (const layer of subPolygons) {
-            if ('style' in layer && layer['style'] !== undefined)
-                styles.push(layer['style'])
+            if (layer.style !== undefined)
+                styles.push(layer.style)
         }
     }
     return getUnique(styles, 'name');
 }
 
-function getUnique(arr: Array<any>, comp: string): Array<any> {
+function getUnique(arr: Array<Territorium.Style>, comp: string): Array<Territorium.Style> {
     return arr
         .map(e => e[comp])
         .map((e, i, final) => final.indexOf(e) === i && i)
         .filter(e => arr[e]).map(e => arr[e]);
 }
 
-export function createStyles(styles: Array<any>): string {
-    let s = '<Map>';
-    let textSize = 0.0;
+export function createStyles(styles: Array<Territorium.Style>): string {
+    let s = '';
     for (const style of styles) {
         let name = style.name;
         if (name === 'defaultStyle')
@@ -100,41 +110,54 @@ export function createStyles(styles: Array<any>): string {
         s += `<Style name="${name}">`;
         s += ` <Rule><LineSymbolizer stroke="${style.color}" stroke-width="${style.width}" stroke-opacity="${style.opacity}"/></Rule>`;
         s += '</Style>';
-        if ('size' in style && style['size'] !== undefined) {
-            textSize = style['size'];
-        }
     }
     if (s.length == 0) {
         s += '<Style name="defaultStyle">';
         s += ` <Rule><LineSymbolizer stroke="#FF0000" stroke-width="6" stroke-opacity="0.33"/></Rule>`;
         s += '</Style>';
     }
-    if (textSize === 0.0)
-        textSize = 12.0;
-    s += '<Style name="names_style">';
-    s += ' <Rule>';
-    s += `  <TextSymbolizer face-name="DejaVu Sans Book" size="${textSize}" fill="white" halo-fill="black" halo-radius="2" horizontal-alignment="middle">[name]</TextSymbolizer>`;
-    s += ' </Rule>';
-    s += '</Style>';
-    s += '</Map>';
     return s;
 }
 
-export function getInline(layers: Array<any>): string {
+export function createTextStyle(polygon: Territorium.Polygon): string {
+    let s = '';
+    let textSize = 12.0;
+    let fontName = 'DejaVu Sans Book';
+    let fontColor = 'white';
+
+    if (polygon.name === undefined)
+        return '';
+
+    if (polygon.name.size !== undefined)
+        textSize = polygon.name.size
+    if (polygon.name.size !== undefined)
+        fontName = polygon.name.fontName
+    if (polygon.name.size !== undefined)
+        fontColor = polygon.name.color
+
+    s += '<Style name="names_style">';
+    s += ' <Rule>';
+    s += `  <TextSymbolizer face-name="${fontName}" size="${textSize}" fill="${fontColor}" halo-fill="black" halo-radius="${textSize * 0.1}" horizontal-alignment="middle">[name]</TextSymbolizer>`;
+    s += ' </Rule>';
+    s += '</Style>';
+    return s;
+}
+
+export function getInline(layers: Array<Territorium.Layer>): string {
     let nameString = 'name,x,y\n';
     for (const layer of layers) {
-        if (!('name' in layer || layer['name'] === undefined))
+        if (layer.name === undefined)
             continue;
-        if ('visible' in layer['name'] && layer['name']['visible'] !== undefined && layer['name']['visible'] === false) {
+        if (layer.name.visible === undefined || layer.name.visible === false) {
             continue;
         }
-        if ('text' in layer['name'] && layer['name']['text'] !== undefined) {
-            if ('position' in layer['name'] && layer['name']['position'] !== undefined)
-                nameString += `"${layer['name']['text']}",${layer['name']['position'][0]},${layer['name']['position'][1]}\n`;
+        if (layer.name.text !== undefined) {
+            if (layer.name.position !== undefined)
+                nameString += `"${layer.name.text}",${layer.name.position[0]},${layer.name.position[1]}\n`;
             else {
-                if ('way' in layer && layer['way'] !== undefined) {
-                    let centroid = turf.centroid(layer['way']);
-                    nameString += `"${layer['name']['text']}",${centroid.geometry.coordinates[0]},${centroid.geometry.coordinates[1]}\n`;
+                if (layer.way !== undefined) {
+                    let centroid = turf.centroid(layer.way as turf.Geometry);
+                    nameString += `"${layer.name.text}",${centroid.geometry.coordinates[0]},${centroid.geometry.coordinates[1]}\n`;
                 }
             }
         }

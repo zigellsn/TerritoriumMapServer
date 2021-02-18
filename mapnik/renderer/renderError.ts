@@ -18,7 +18,7 @@ export class RenderError extends Error {
 
     constructor(public message: string) {
         super(message);
-        this.name = "RenderError";
+        this.name = 'RenderError';
         this.stack = (<any>new Error()).stack;
     }
 }

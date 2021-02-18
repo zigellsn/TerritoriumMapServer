@@ -16,13 +16,14 @@
 
 import {Margins, PageOrientation, PageSize, TDocumentDefinitions} from "pdfmake/interfaces";
 import {DateTime} from 'luxon';
+import {Territorium} from "../index";
 import PdfPrinter = require('pdfmake');
 
 let fontsDirectory = process.env.FONT_DIRECTORY;
 if (fontsDirectory === undefined || fontsDirectory === '')
     fontsDirectory = 'fonts';
 
-export function buildPdf(page: Record<any, any>, buffers: Array<any>, cb: (...args: any[]) => void) {
+export function buildPdf(page: Territorium.Page, buffers: Array<Territorium.ResultBuffer>, cb: (...args: any[]) => void) {
 
     function getDoc(pdfDoc, cb: (...args: any[]) => void) {
         let chunks = [];
@@ -38,38 +39,38 @@ export function buildPdf(page: Record<any, any>, buffers: Array<any>, cb: (...ar
     }
 
     let pageSize = 'A4';
-    let pageOrientation = 'portrait'
+    let pageOrientation = 'portrait';
     let pageMargins = [36, 36, 36, 36];
     let mediaType = 'image/png';
     let pageDecoration = true;
-    if ('pageSize' in page && page['pageSize'] !== undefined)
-        pageSize = page['pageSize'];
-    if ('orientation' in page && page['orientation'] !== undefined)
-        pageOrientation = page['orientation'];
-    if ('margins' in page && page['margins'] !== undefined)
-        pageMargins = page['margins'];
-    if ('pageDecoration' in page && page['pageDecoration'] !== undefined)
-        pageDecoration = page['pageDecoration'];
+    if (page.pageSize !== undefined)
+        pageSize = page.pageSize;
+    if (page.orientation !== undefined)
+        pageOrientation = page.orientation;
+    if (page.margins !== undefined)
+        pageMargins = page.margins as [number, number, number, number];
+    if (page.pageDecoration !== undefined)
+        pageDecoration = page.pageDecoration;
 
     let content = [];
-    let name = undefined;
+    let name;
     let keywords = '';
     for (const buffer of buffers) {
         let ppi = 72.0;
-        if ('mediaType' in buffer && buffer['mediaType'] !== undefined)
-            mediaType = buffer['mediaType'];
-        if ('ppi' in buffer && buffer['ppi'] !== undefined)
-            ppi = buffer['ppi'];
-        keywords = `${keywords}${buffer['name']}, `;
+        if (buffer.mediaType !== undefined)
+            mediaType = buffer.mediaType;
+        if (buffer.ppi !== undefined)
+            ppi = buffer.ppi;
+        keywords = `${keywords}${buffer.name}, `;
         if (pageDecoration)
-            name = {text: buffer['name']}
+            name = {text: buffer.name}
         if (mediaType === 'image/svg+xml') {
             content.push({
                 stack: [
                     name,
                     {
-                        svg: buffer['buffer'],
-                        width: (buffer['size'][0] / ppi * 72.0),
+                        svg: buffer.buffer,
+                        width: (buffer.size[0] / ppi * 72.0),
                         options: {
                             assumePt: true,
                         }
@@ -80,8 +81,8 @@ export function buildPdf(page: Record<any, any>, buffers: Array<any>, cb: (...ar
                 stack: [
                     name,
                     {
-                        image: buffer['buffer'],
-                        width: (buffer['size'][0] / ppi * 72.0),
+                        image: buffer.buffer,
+                        width: (buffer.size[0] / ppi * 72.0),
                         options: {
                             assumePt: true,
                         }
@@ -116,10 +117,10 @@ export function buildPdf(page: Record<any, any>, buffers: Array<any>, cb: (...ar
             return {
                 margin: [pageMargins[0], 0, pageMargins[2], 0],
                 columns: [{
-                    alignment: "left",
+                    alignment: 'left',
                     text: `${dateString} ${timeString}`,
                 }, {
-                    alignment: "right",
+                    alignment: 'right',
                     text: `${currentPage.toString()} of ${pageCount.toString()}`
                 }]
             }
@@ -135,5 +136,5 @@ export function buildPdf(page: Record<any, any>, buffers: Array<any>, cb: (...ar
     };
     const printer = new PdfPrinter(fonts);
     let pdfDoc = printer.createPdfKitDocument(docDefinition);
-    getDoc(pdfDoc, cb)
+    getDoc(pdfDoc, cb);
 }
