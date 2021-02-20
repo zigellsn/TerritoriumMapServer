@@ -19,7 +19,7 @@
     "canvas": "^2.6.1",
     "@turf/turf": "^6.3.0",
     "@turf/centroid": "^6.3.0",
-    "mapnik": "^4.5.5",
+    "mapnik": "^4.5.6",
     "pdfmake": "^0.1.70",
     "luxon": "^1.26.0",
     "uuid": "^8.3.2"
