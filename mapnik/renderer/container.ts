@@ -17,6 +17,8 @@
 import {Margins, PageOrientation, PageSize, TDocumentDefinitions} from "pdfmake/interfaces";
 import {DateTime} from 'luxon';
 import {Territorium} from "../index";
+
+import * as SIZES from 'pdfmake/src/standardPageSizes';
 import PdfPrinter = require('pdfmake');
 
 let fontsDirectory = process.env.FONT_DIRECTORY;
@@ -40,7 +42,7 @@ export function buildPdf(page: Territorium.Page, buffers: Array<Territorium.Resu
 
     let pageSize = 'A4';
     let pageOrientation = 'portrait';
-    let pageMargins = [36, 36, 36, 36];
+    let pageMargins: number | [number, number] | [number, number, number, number] = [36, 36, 36, 36];
     let mediaType = 'image/png';
     let pageDecoration = true;
     if (page.pageSize !== undefined)
@@ -48,13 +50,32 @@ export function buildPdf(page: Territorium.Page, buffers: Array<Territorium.Resu
     if (page.orientation !== undefined)
         pageOrientation = page.orientation;
     if (page.margins !== undefined)
-        pageMargins = page.margins as [number, number, number, number];
+        pageMargins = page.margins as number | [number, number] | [number, number, number, number];
     if (page.pageDecoration !== undefined)
         pageDecoration = page.pageDecoration;
 
     let content = [];
     let name;
     let keywords = '';
+
+    let pageMeasure = SIZES[pageSize];
+    if (pageOrientation === 'landscape') {
+        let tmp = pageMeasure[0];
+        pageMeasure[0] = pageMeasure[1];
+        pageMeasure[1] = tmp;
+    }
+
+    if (!(pageMargins instanceof Array)) {
+        pageMeasure[0] = pageMeasure[0] - 2 * pageMargins;
+        pageMeasure[1] = pageMeasure[1] - 2 * pageMargins;
+    } else if (pageMargins.length === 2) {
+        pageMeasure[0] = pageMeasure[0] - 2 * pageMargins[0];
+        pageMeasure[1] = pageMeasure[1] - 2 * pageMargins[1];
+    } else {
+        pageMeasure[0] = pageMeasure[0] - pageMargins[0] - pageMargins[2];
+        pageMeasure[1] = pageMeasure[1] - pageMargins[1] - pageMargins[3];
+    }
+
     for (const buffer of buffers) {
         let ppi = 72.0;
         if (buffer.mediaType !== undefined)
@@ -64,13 +85,28 @@ export function buildPdf(page: Territorium.Page, buffers: Array<Territorium.Resu
         keywords = `${keywords}${buffer.name}, `;
         if (pageDecoration)
             name = {text: buffer.name}
+
+        let width = (buffer.size[0] / ppi * 72.0);
+        let height = (buffer.size[1] / ppi * 72.0);
+
+        let q_w = pageMeasure[0] / width;
+        let q_h = pageMeasure[1] / height;
+        if (q_w < 1 || q_h < 1) {
+            let q = q_w;
+            if (q_h < q_w)
+                q = q_h;
+            width = width * q;
+            height = height * q;
+        }
+
         if (mediaType === 'image/svg+xml') {
             content.push({
                 stack: [
                     name,
                     {
                         svg: buffer.buffer,
-                        width: (buffer.size[0] / ppi * 72.0),
+                        width: width,
+                        height: height,
                         options: {
                             assumePt: true,
                         }
@@ -82,7 +118,8 @@ export function buildPdf(page: Territorium.Page, buffers: Array<Territorium.Resu
                     name,
                     {
                         image: buffer.buffer,
-                        width: (buffer.size[0] / ppi * 72.0),
+                        width: width,
+                        height: height,
                         options: {
                             assumePt: true,
                         }
@@ -107,7 +144,6 @@ export function buildPdf(page: Territorium.Page, buffers: Array<Territorium.Resu
         pageMargins: pageMargins as Margins,
         content: content
     };
-
     let date = DateTime.local()
     let dateString = date.toFormat('yyyy/MM/dd');
     let timeString = date.toFormat('HH:mm:ss');
