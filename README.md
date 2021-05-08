@@ -40,7 +40,7 @@ cd ../..
 
 Download pbf file and place in ./exchange. Adjust in ./frontend/.env environment variable OSM2PGSQL_DATAFILE accordingly.
 
-Provide key.pem and crt.pem files in ./nginx/
+Provide key.pem and crt.pem files in ./nginx/certs/
 
 Then run
 ``` bash
