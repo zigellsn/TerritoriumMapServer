@@ -1,4 +1,4 @@
-FROM postgis/postgis:13-3.1
+FROM postgis/postgis:14-3.2
 
 RUN set -ex \
   && buildDeps=' \
@@ -9,7 +9,7 @@ RUN set -ex \
   wget \
   libkakasi2-dev \
   pandoc \
-  postgresql-server-dev-13 \
+  postgresql-server-dev-14 \
   ca-certificates' \
   && apt-get update && apt-get install -y $buildDeps libkakasi2 --no-install-recommends \
   && mkdir -p /build \

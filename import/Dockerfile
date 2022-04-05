@@ -1,6 +1,6 @@
 FROM debian:buster-slim
 
-ENV VERSION 1.4.2
+ENV VERSION 1.6.0
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \

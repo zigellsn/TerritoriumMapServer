@@ -22,7 +22,7 @@ services:
       - POSTGRES_USER=tms
       - POSTGRES_PASSWORD=tms
   db:
-    image: postgres:13-alpine
+    image: postgres:14-alpine
     volumes:
       - type: bind
         source: ./data
