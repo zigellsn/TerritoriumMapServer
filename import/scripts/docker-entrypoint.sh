@@ -18,6 +18,14 @@ OSM2PGSQL_CACHE="${OSM2PGSQL_CACHE:-512}"
 OSM2PGSQL_NUMPROC="${OSM2PGSQL_NUMPROC:-1}"
 OSM2PGSQL_DATAFILE="${OSM2PGSQL_DATAFILE:-data.osm.pbf}"
 
+echo "Waiting for postgres..."
+
+while ! nc -z "${PGHOST}" "${PGPORT}"; do
+  sleep 0.1
+done
+
+echo "PostgreSQL started"
+
 psql -U "${PGUSER}" -d "${DBNAME}" -c 'CREATE EXTENSION IF NOT EXISTS hstore;'
 if [ "${STYLE:-de}" = 'de' ]; then
   psql -U "${PGUSER}" -d "${DBNAME}" -c 'CREATE EXTENSION IF NOT EXISTS osml10n CASCADE;'

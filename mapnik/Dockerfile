@@ -1,7 +1,7 @@
-FROM node:14-buster-slim
+FROM node:14-bullseye-slim
 
 RUN apt-get update && apt-get install -y \
-  libmapnik3.0 \
+  libmapnik3.1 \
   libmapnik-dev \
   postgresql-client \
   netcat \

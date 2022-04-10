@@ -1,18 +1,19 @@
-FROM debian:buster-slim
+FROM debian:bullseye-slim
 
 ENV VERSION 1.6.0
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-    libboost-system1.67.0 \
-    libboost-filesystem1.67.0 \
+    libboost-system1.74.0 \
+    libboost-filesystem1.74.0 \
     libpq5 \
     zlib1g \
     libexpat1 \
     libbz2-1.0 \
-    libproj13 \
-    liblua5.2 \
+    libproj19 \
+    liblua5.3 \
     postgresql-client \
+    netcat \
     && rm -rf /var/lib/apt/lists/*
 
 RUN set -ex \
@@ -30,8 +31,8 @@ RUN set -ex \
     libbz2-dev \
     libpq-dev \
     libproj-dev \
-    lua5.2 \
-    liblua5.2-dev' \
+    lua5.3 \
+    liblua5.3-dev' \
     && apt-get update \
     && apt-get install -y $buildDeps --no-install-recommends \
     && mkdir -p /build \

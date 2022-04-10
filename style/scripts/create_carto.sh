@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
-DE_VERSION=4.24.0-l10n1
-EN_VERSION=5.2.0
+DE_VERSION=4.24.0-de1
+EN_VERSION=5.4.0
 
 if [ "${STYLE:-de}" = 'de' ]; then
   wget https://github.com/giggls/openstreetmap-carto-de/archive/v${DE_VERSION}.tar.gz

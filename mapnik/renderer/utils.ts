@@ -31,7 +31,7 @@ export function addCopyrightTextRaster(src: Buffer, width: number, height: numbe
     img.src = src;
     ctx.font = '10px DejaVu Sans Book';
     let text = ctx.measureText(copyright);
-    ctx.fillText(copyright, 10, height - text.emHeightAscent);
+    ctx.fillText(copyright, 10, height - text.fontBoundingBoxAscent);
     return canvas.toBuffer();
 }
 
