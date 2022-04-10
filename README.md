@@ -18,6 +18,7 @@ mkdir exchange
 mkdir data
 mkdir geodata
 mkdir files
+mkdir static
 docker-compose run geodb
 ```
 
