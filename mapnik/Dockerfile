@@ -3,7 +3,7 @@ FROM node:14-bullseye-slim
 RUN apt-get update && apt-get install -y \
   libmapnik3.1 \
   libmapnik-dev \
-  postgresql-client \
+  postgresql-client-14 \
   netcat \
   && rm -rf /var/lib/apt/lists/*
 
