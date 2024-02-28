@@ -1,6 +1,6 @@
 FROM debian:bullseye-slim
 
-ENV VERSION 1.6.0
+ENV VERSION 1.11.0
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
