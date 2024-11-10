@@ -13,7 +13,7 @@ services:
     build:
       context: frontend/
       dockerfile: Dockerfile.prod
-    image: "tms/frontend:latest"
+    image: "localhost/tms/frontend:latest"
     command:  bash -c "daphne -b 0.0.0.0 -p 8000 TerritoriumMapServerFrontend.asgi:application"
     restart: always
     ports:

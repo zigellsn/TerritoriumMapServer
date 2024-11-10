@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim
+FROM docker.io/debian:bookworm-slim
 
 ENV VERSION 2.0.0
 

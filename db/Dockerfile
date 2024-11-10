@@ -1,4 +1,4 @@
-FROM postgis/postgis:17-3.5
+FROM docker.io/postgis/postgis:17-3.5
 
 RUN set -ex \
   && buildDeps=' \

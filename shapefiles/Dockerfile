@@ -1,4 +1,4 @@
-FROM tms/python-base:slim
+FROM localhost/tms/python-base:slim
 
 ENV PYTHONUNBUFFERED 1
 
