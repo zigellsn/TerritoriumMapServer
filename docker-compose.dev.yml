@@ -1,4 +1,5 @@
-version: '3.9'
+name: tms_dev
+
 services:
   frontend:
     build:

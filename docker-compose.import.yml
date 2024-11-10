@@ -1,4 +1,5 @@
-version: '3.9'
+name: tms_import
+
 services:
   import:
     image: tms/osm2pgsql:1

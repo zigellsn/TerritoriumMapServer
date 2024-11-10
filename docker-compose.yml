@@ -1,4 +1,5 @@
-version: '3.9'
+name: tms
+
 services:
   mq:
     image: rabbitmq:3-alpine

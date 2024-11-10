@@ -1,6 +1,6 @@
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 
-ENV VERSION 1.11.0
+ENV VERSION 2.0.0
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \

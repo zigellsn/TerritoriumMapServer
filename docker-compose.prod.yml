@@ -1,4 +1,5 @@
-version: '3.9'
+name: tms_prod
+
 services:
   mq:
     restart: always

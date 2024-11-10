@@ -1,0 +1,75 @@
+FROM node:22-bookworm-slim
+
+ENV MAPNIK 4.0.3
+ENV MAPBOX_GEOMETRY 2.0.3
+ENV MAPBOX_POLY 2.0.1
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+  postgresql-client-15 \
+  netcat-openbsd \
+  python3 \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN set -ex \
+  && buildDeps=' \
+  libmapbox-variant-dev \
+  ca-certificates \
+  wget \
+  bzip2 \
+  clang \
+  libharfbuzz-dev \
+  libcairo2-dev \
+  libboost-regex-dev \
+  libboost-program-options-dev \
+  libproj-dev \
+  libicu-dev \
+  libjpeg-dev \
+  libwebp-dev \
+  libtiff-dev \
+  libsqlite3-dev \
+  libgdal-dev \
+  libpq-dev \
+  libprotozero-dev' \
+  && apt-get update \
+  && apt-get install -y $buildDeps --no-install-recommends \
+  && mkdir -p /build \
+  && cd /build \
+  && wget https://github.com/mapbox/geometry.hpp/archive/refs/tags/v${MAPBOX_GEOMETRY}.tar.gz \
+  && tar -xvf v${MAPBOX_GEOMETRY}.tar.gz \
+  && mv geometry.hpp-${MAPBOX_GEOMETRY}/include/mapbox/* /usr/include/mapbox/ \
+  && wget https://github.com/mapbox/polylabel/archive/refs/tags/v${MAPBOX_POLY}.tar.gz \
+  && tar -xvf v${MAPBOX_POLY}.tar.gz \
+  && mv polylabel-${MAPBOX_POLY}/include/mapbox/* /usr/include/mapbox/ \
+  && wget https://github.com/mapnik/mapnik/releases/download/v${MAPNIK}/mapnik-v${MAPNIK}.tar.bz2 \
+  && tar -xvf mapnik-v${MAPNIK}.tar.bz2 \
+  && cd mapnik-v${MAPNIK} \
+  && python3 ./scons/scons.py configure \
+  && python3 ./scons/scons.py install -j8 \
+  && rm -rf /build \
+  && apt-get purge -y --auto-remove $buildDeps \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /input
+VOLUME ["/input"]
+
+ENV NODE_USER node
+ENV HOME /home/$NODE_USER
+ENV FONT_DIRECTORY $HOME/app/fonts
+RUN mkdir $HOME/app
+
+WORKDIR $HOME/app
+
+COPY . .
+
+RUN chown -R $NODE_USER $HOME/app
+
+USER $NODE_USER
+
+RUN npm install
+
+RUN npm run build
+
+EXPOSE 5000
+
+ENTRYPOINT ["./scripts/docker-entrypoint.sh"]

@@ -1,0 +1,3 @@
+registry=https://registry.npmjs.org/
+@mapnik:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=<Your_Github_Token_Here>
