@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-// import {Renderer} from './renderer/mockRenderer';
+import {Renderer as MockRenderer} from './renderer/mockRenderer';
 import {Renderer} from './renderer/renderer';
 import {DateTime} from 'luxon';
 import * as amqp from 'amqplib/callback_api';
@@ -33,7 +33,12 @@ let dir = process.env.EXCHANGE_DIR;
 if (dir === undefined || dir === '')
     dir = '/input/';
 
-let renderer = new Renderer();
+let mock = process.env.MOCK;
+let renderer = null;
+if (mock === undefined || mock === '')
+    renderer = new Renderer();
+else
+    renderer = new MockRenderer();
 
 function sendBuffer(dict: Territorium.Job, buffers: Array<Territorium.ResultBuffer>, error: boolean, channel: amqp.Channel, sendQueue: string, msg: Message) {
     let result: Territorium.Result = new class implements Territorium.Result {
@@ -95,6 +100,7 @@ function sendError(dict: Territorium.Job, message: string, channel: amqp.Channel
 amqp.connect(url, function (error0, connection) {
 
     if (error0) {
+        console.error(url);
         console.error(error0.toString());
         return;
     }

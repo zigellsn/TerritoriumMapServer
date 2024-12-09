@@ -74,6 +74,18 @@ export function createLayers(polygon: Territorium.Polygon): Array<Territorium.La
     return layers;
 }
 
+export function mergeLayers(layers: Array<Territorium.Layer>): Array<Territorium.Layer> {
+    const mergedLayers: Map<String, Territorium.Layer> = new Map();
+    layers.map((layer, _) => {
+        const key = layer.styleName;
+        if (!mergedLayers[key]) mergedLayers[key] = layer;
+        else
+            mergedLayers[key].way = turf.union(turf.featureCollection([...turf.polygonize(mergedLayers[key].way).features, ...turf.polygonize(layer.way).features]));
+
+    });
+    return Array.from(mergedLayers.values());
+}
+
 export function createUniqueStyles(polygon: Territorium.Polygon): Array<Territorium.Style> {
     let styles: Array<Territorium.Style> = [];
     if (polygon.style !== undefined)
@@ -156,7 +168,7 @@ export function getInline(layers: Array<Territorium.Layer>): string {
                 nameString += `"${layer.name.text}",${layer.name.position[0]},${layer.name.position[1]}\n`;
             else {
                 if (layer.way !== undefined) {
-                    let centroid = turf.centroid(layer.way as turf.Geometry);
+                    let centroid = turf.centroid(layer.way);
                     nameString += `"${layer.name.text}",${centroid.geometry.coordinates[0]},${centroid.geometry.coordinates[1]}\n`;
                 }
             }

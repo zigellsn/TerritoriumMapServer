@@ -1,57 +1,61 @@
 FROM docker.io/debian:bookworm-slim
 
-ENV VERSION 2.0.0
+ENV VERSION 1.2.1
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-    libboost-system1.74.0 \
-    libboost-filesystem1.74.0 \
-    libpq5 \
-    zlib1g \
-    libexpat1 \
-    libbz2-1.0 \
-    libproj19 \
-    liblua5.3 \
-    postgresql-client \
-    netcat \
+RUN echo "deb http://deb.debian.org/debian bookworm-backports main contrib non-free non-free-firmware" >> /etc/apt/sources.list \
+    && apt-get update \
+    && apt-get install --no-install-recommends -y \
+    osm2pgsql/bookworm-backports \
+    netcat-openbsd \
+    postgresql-15 \
+    libunac1 \
+    libicu72 \
+    lua5.3 \
+    lua-socket \
+    python3 \
+    python3-venv \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 RUN set -ex \
     && buildDeps=' \
-    make \
-    cmake \
-    g++ \
     wget \
-    ca-certificates \
-    libboost-dev \
-    libboost-system-dev \
-    libboost-filesystem-dev \
-    libexpat1-dev \
-    zlib1g-dev \
-    libbz2-dev \
-    libpq-dev \
-    libproj-dev \
-    lua5.3 \
-    liblua5.3-dev' \
+    dpkg-dev \
+    build-essential \
+    debhelper \
+    liblua5.3-dev \
+    libunac1-dev \
+    libicu-dev \
+    libpython3-dev \
+    python3-icu \
+    pkg-config' \
     && apt-get update \
     && apt-get install -y $buildDeps --no-install-recommends \
     && mkdir -p /build \
     && cd /build \
-    && wget https://github.com/openstreetmap/osm2pgsql/archive/${VERSION}.tar.gz \
-    && tar -xvf ${VERSION}.tar.gz \
-    && mkdir -p /build/osm2pgsql-${VERSION}/build \
-    && cd /build/osm2pgsql-${VERSION}/build \
-    && cmake .. \
-    && make \
-    && make install \
+    && wget https://github.com/giggls/osml10n/archive/refs/tags/v${VERSION}.tar.gz \
+    && tar -xvf v${VERSION}.tar.gz \
+    && cd /build/osml10n-${VERSION} \
+    && mkdir -p /scripts \
+    && cp openstreetmap-carto-hstore-only-l10n.lua /scripts \
+    && make deb \
+    && cd lua_unac \
+    && make deb \
+    && dpkg -i ../lua-unaccent_*.deb \
+    && cd .. \
+    && dpkg -i ../osml10n_*_all.deb \
+    && make install-daemon \
     && rm -rf /build \
     && apt-get purge -y --auto-remove $buildDeps \
     && rm -rf /var/lib/apt/lists/*
 
-COPY scripts/docker-entrypoint.sh /usr/local/bin/
+ENV VENV=/usr/local/osml10n
+ENV PATH="$VENV/bin:$PATH"
 
 RUN mkdir -p /input
 VOLUME ["/input"]
+
+COPY scripts/docker-entrypoint.sh /usr/local/bin/
 
 ENTRYPOINT ["sh", "/usr/local/bin/docker-entrypoint.sh"]
 

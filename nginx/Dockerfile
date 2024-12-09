@@ -1,4 +1,4 @@
-FROM docker.io/nginx:mainline-alpine as builder
+FROM docker.io/nginx:1.27.1-alpine as builder
 
 ARG ENABLED_MODULES
 
@@ -60,7 +60,7 @@ RUN set -ex \
     done \
     && echo "BUILT_MODULES=\"$BUILT_MODULES\"" > /tmp/packages/modules.env
 
-FROM docker.io/nginx:mainline-alpine
+FROM docker.io/nginx:1.27.1-alpine
 
 COPY --from=builder /tmp/packages /tmp/packages
 RUN set -ex \

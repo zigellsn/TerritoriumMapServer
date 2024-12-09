@@ -24,11 +24,11 @@ import {
     createStyles,
     createTextStyle,
     createUniqueStyles,
-    getInline
+    getInline, mergeLayers
 } from "./utils";
 import {Territorium} from "../index";
 
-const mapnik = require('mapnik');
+const mapnik = require('@mapnik/mapnik');
 
 let osmStyle = process.env.STYLE;
 if (osmStyle === undefined || osmStyle === '')
@@ -46,12 +46,12 @@ export class Renderer {
         mapnik.register_default_input_plugins();
     }
 
-    private addAdditionalLayers(m, layers: Array<Territorium.Layer>, styles: string, inline: string) {
+    private addAdditionalLayers(m: any, layers: Array<Territorium.Layer>, styles: string, inline: string) {
 
         m.fromStringSync(styles);
 
         let i = 0;
-        //TODO: Merge layers with the same style
+
         for (const l of layers) {
             let ds = new mapnik.Datasource({
                 type: 'geojson',
@@ -77,6 +77,7 @@ export class Renderer {
     map(polygon: Territorium.Polygon): Buffer {
         try {
             let layers = createLayers(polygon);
+            let mergedLayers = mergeLayers(layers);
             let uniqueStyles = createUniqueStyles(polygon);
             let lineStyles = createStyles(uniqueStyles);
             let textStyles = createTextStyle(polygon);
@@ -86,7 +87,7 @@ export class Renderer {
             let m = new mapnik.Map(polygon.size[0], polygon.size[1]);
             m.loadSync(osmStyle);
             m.zoomToBox(polygon.bbox);
-            this.addAdditionalLayers(m, layers, styles, inline);
+            this.addAdditionalLayers(m, mergedLayers, styles, inline);
             let src;
             if (polygon.mediaType === 'image/svg+xml') {
                 if (!mapnik.supports.cairo) {

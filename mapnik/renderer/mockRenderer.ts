@@ -17,8 +17,10 @@
 import {createLayers, createStyles, createTextStyle, createUniqueStyles, getInline} from "./utils";
 import {Territorium} from "../index";
 
-const fs = require('fs');
-const path = require('path');
+// @ts-ignore
+import fs from "node:fs";
+
+import path = require('path');
 
 export class Renderer {
     constructor() {

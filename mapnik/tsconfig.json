@@ -4,7 +4,8 @@
     "target": "es5",
     "module": "CommonJS",
     "skipLibCheck": true,
-    "alwaysStrict": true
+    "alwaysStrict": true,
+    "sourceMap": true
   },
   "include": [
     "./app.ts"

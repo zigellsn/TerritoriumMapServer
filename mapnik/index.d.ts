@@ -57,7 +57,7 @@ export declare namespace Territorium {
 
     interface SubPolygon {
         name: SubPolygonName;
-        way: object;
+        way: Feature<Polygon | MultiPolygon>;
         style: Style | undefined;
     }
 
@@ -66,7 +66,7 @@ export declare namespace Territorium {
         number: string;
         size: [number, number];
         bbox: [number, number, number, number];
-        way: object;
+        way: Feature<Polygon | MultiPolygon>;
         mediaType: 'image/png' | 'image/svg+xml';
         style: Style | undefined;
         subpolygon: SubPolygon | Array<SubPolygon> | undefined;
@@ -78,7 +78,7 @@ export declare namespace Territorium {
     }
 
     interface Layer {
-        way: object;
+        way: Feature<Polygon | MultiPolygon>;
         name: PolygonName | SubPolygonName;
         styleName: string
     }

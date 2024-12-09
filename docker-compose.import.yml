@@ -28,12 +28,13 @@ services:
   python-base:
     image: localhost/tms/python-base:slim
     build:
-      context: shapefiles/
+      context: transcript/
       dockerfile: Dockerfile.python-base
   shapefiles:
     image: localhost/tms/shapefiles:1
     depends_on:
       - python-base
+      - geodb
     build:
       context: shapefiles/
       dockerfile: Dockerfile
@@ -41,3 +42,12 @@ services:
       - type: bind
         source: ./exchange
         target: /output
+    env_file:
+      - frontend/.env
+  transcript:
+    image: localhost/tms/transcript:1
+    build:
+      context: transcript/
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:8033:8033"
