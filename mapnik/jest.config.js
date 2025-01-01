@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-export class RenderError extends Error {
-
-    constructor(public message: string) {
-        super(message);
-        this.name = 'RenderError';
-        this.stack = (<any>new Error()).stack;
-    }
-}
+module.exports = {
+    transform: {'^.+\\.ts?$': 'ts-jest'},
+    testEnvironment: 'node',
+    testRegex: '/tests/.*\\.(test|spec)?\\.(ts|tsx)$',
+    moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node']
+};

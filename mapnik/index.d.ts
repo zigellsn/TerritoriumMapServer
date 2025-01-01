@@ -1,4 +1,4 @@
-/* * Copyright 2019-2023 Simon Zigelli
+/* * Copyright 2019-2025 Simon Zigelli
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ export declare namespace Territorium {
 
     interface SubPolygon {
         name: SubPolygonName;
-        way: Feature<Polygon | MultiPolygon>;
+        way: any;
         style: Style | undefined;
     }
 
@@ -66,7 +66,7 @@ export declare namespace Territorium {
         number: string;
         size: [number, number];
         bbox: [number, number, number, number];
-        way: Feature<Polygon | MultiPolygon>;
+        way: any;
         mediaType: 'image/png' | 'image/svg+xml';
         style: Style | undefined;
         subpolygon: SubPolygon | Array<SubPolygon> | undefined;
@@ -78,7 +78,7 @@ export declare namespace Territorium {
     }
 
     interface Layer {
-        way: Feature<Polygon | MultiPolygon>;
+        way: any;
         name: PolygonName | SubPolygonName;
         styleName: string
     }

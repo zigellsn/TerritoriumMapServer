@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 Simon Zigelli
+ * Copyright 2019-2025 Simon Zigelli
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ export class Renderer {
         for (const l of layers) {
             let ds = new mapnik.Datasource({
                 type: 'geojson',
-                inline: JSON.stringify(l.way)
+                inline: JSON.stringify(l)
             });
             let layer = new mapnik.Layer(`border${i}`, this.srs);
             layer.datasource = ds;

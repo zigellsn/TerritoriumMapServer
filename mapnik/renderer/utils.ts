@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2023 Simon Zigelli
+ * Copyright 2019-2025 Simon Zigelli
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,16 +74,31 @@ export function createLayers(polygon: Territorium.Polygon): Array<Territorium.La
     return layers;
 }
 
-export function mergeLayers(layers: Array<Territorium.Layer>): Array<Territorium.Layer> {
-    const mergedLayers: Map<String, Territorium.Layer> = new Map();
+export function mergeLayers(layers: Array<Territorium.Layer>): Array<any> {
+    const mergedLayers: Map<String, Array<any>> = new Map();
     layers.map((layer, _) => {
         const key = layer.styleName;
-        if (!mergedLayers[key]) mergedLayers[key] = layer;
-        else
-            mergedLayers[key].way = turf.union(turf.featureCollection([...turf.polygonize(mergedLayers[key].way).features, ...turf.polygonize(layer.way).features]));
-
+        if (!mergedLayers.has(key))
+            if (layer.way.type === 'GeometryCollection') {
+                mergedLayers.set(key, [layer.way.geometries]);
+            } else {
+                mergedLayers.set(key, [layer.way]);
+            }
+        else {
+            if (layer.way.type === 'GeometryCollection') {
+                for (const geometry of layer.way.geometries) {
+                    mergedLayers.get(key).push(geometry);
+                }
+            } else {
+                mergedLayers.get(key).push(layer.way);
+            }
+        }
     });
-    return Array.from(mergedLayers.values());
+    const mergedLayersCollection: Map<String, any> = new Map();
+    mergedLayers.forEach((value: Array<any>, new_key: String) => {
+        mergedLayersCollection.set(new_key, turf.geometryCollection(value).geometry);
+    });
+    return Array.from(mergedLayersCollection.values());
 }
 
 export function createUniqueStyles(polygon: Territorium.Polygon): Array<Territorium.Style> {

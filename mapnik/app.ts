@@ -1,4 +1,4 @@
-/* * Copyright 2019-2020 Simon Zigelli
+/* * Copyright 2019-2025 Simon Zigelli
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -113,11 +113,11 @@ amqp.connect(url, function (error0, connection) {
         let sendQueue = 'maps';
 
         channel.assertQueue(recQueue, {
-            durable: false
+            durable: true
         });
 
         channel.assertQueue(sendQueue, {
-            durable: false
+            durable: true
         });
 
         channel.prefetch(1);
