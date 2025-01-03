@@ -11,7 +11,7 @@
     "@types/amqplib": "^0.10.6",
     "@types/mapnik": "^3.0.6",
     "@types/pdfmake": "^0.2.10",
-    "@types/node": "^22.10.1",
+    "@types/node": "^22.10.5",
     "@types/luxon": "^3.4.2",
     "@types/jest": "^29.5.14",
     "ts-node": "^10.9.2",
@@ -21,11 +21,11 @@
   },
   "dependencies": {
     "amqplib": "^0.10.5",
-    "canvas": "^3.0.0-rc3",
-    "@mapnik/mapnik": "^4.6.5",
-    "@turf/turf": "^7.1.0",
-    "@turf/centroid": "^7.1.0",
-    "pdfmake": "^0.2.15",
+    "canvas": "^3.0.1",
+    "@mapnik/mapnik": "^4.6.6",
+    "@turf/turf": "^7.2.0",
+    "@turf/centroid": "^7.2.0",
+    "pdfmake": "^0.2.18",
     "luxon": "^3.5.0",
     "uuid": "^11.0.3"
   }

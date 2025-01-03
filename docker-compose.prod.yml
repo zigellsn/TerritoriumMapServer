@@ -9,6 +9,8 @@ services:
     restart: always
   mapnik:
     restart: always
+  redis:
+    restart: always
   frontend:
     build:
       context: frontend/
