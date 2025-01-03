@@ -18,11 +18,6 @@ services:
     image: "localhost/tms/frontend:latest"
     command:  bash -c "daphne -b 0.0.0.0 -p 8000 TerritoriumMapServerFrontend.asgi:application"
     restart: always
-    depends_on:
-      - mq
-      - db
-      - mapnik
-      - redis
     ports:
       - "127.0.0.1:8000:8000"
     volumes:

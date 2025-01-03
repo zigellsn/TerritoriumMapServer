@@ -74,6 +74,7 @@ services:
       - mq
       - db
       - mapnik
+      - redis
     volumes:
       - type: bind
         source: ./files
