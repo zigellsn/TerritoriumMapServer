@@ -133,6 +133,9 @@ export function buildPdf(page: Territorium.Page, buffers: Array<Territorium.Resu
         content.pop();
 
     let docDefinition: TDocumentDefinitions = {
+        defaultStyle: {
+            font: 'NotoSans'
+        },
         info: {
             title: 'Territory Maps',
             author: 'Territorium Map Server',
