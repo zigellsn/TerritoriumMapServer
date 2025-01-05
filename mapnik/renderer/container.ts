@@ -23,7 +23,7 @@ import PdfPrinter = require('pdfmake');
 
 let fontsDirectory = process.env.FONT_DIRECTORY;
 if (fontsDirectory === undefined || fontsDirectory === '')
-    fontsDirectory = 'fonts';
+    fontsDirectory = '/input/fonts';
 
 export function buildPdf(page: Territorium.Page, buffers: Array<Territorium.ResultBuffer>, cb: (...args: any[]) => void) {
 
@@ -163,11 +163,11 @@ export function buildPdf(page: Territorium.Page, buffers: Array<Territorium.Resu
         };
 
     let fonts = {
-        Roboto: {
-            normal: `${fontsDirectory}/Roboto-Regular.ttf`,
-            bold: `${fontsDirectory}/Roboto-Medium.ttf`,
-            italics: `${fontsDirectory}/Roboto-Italic.ttf`,
-            bolditalics: `${fontsDirectory}/Roboto-MediumItalic.ttf`
+        NotoSans: {
+            normal: `${fontsDirectory}/NotoSans-Regular.ttf`,
+            bold: `${fontsDirectory}/NotoSans-Bold.ttf`,
+            italics: `${fontsDirectory}/NotoSans-Italic.ttf`,
+            bolditalics: `${fontsDirectory}/NotoSans-Bold.ttf`
         }
     };
     const printer = new PdfPrinter(fonts);

@@ -18,7 +18,7 @@ VOLUME ["/input"]
 
 ENV NODE_USER node
 ENV HOME /home/$NODE_USER
-ENV FONT_DIRECTORY $HOME/app/fonts
+ENV FONT_DIRECTORY /input/fonts
 RUN mkdir $HOME/app
 
 WORKDIR $HOME/app

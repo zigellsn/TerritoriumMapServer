@@ -67,7 +67,7 @@ export class Renderer {
                     '</svg>\n', 30, 30), 'utf-8');
             else {
                 let fs = readFileSync(path.resolve(__dirname, 'testmap.png'));
-                return addCopyrightTextRaster(fs, 30, 30, 'C:\\Windows\\Fonts')
+                return addCopyrightTextRaster(fs, 30, 30)
             }
         } catch (e) {
             throw new RenderError(e.toString());

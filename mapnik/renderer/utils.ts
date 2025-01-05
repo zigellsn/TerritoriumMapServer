@@ -21,7 +21,11 @@ import * as path from "node:path";
 
 const copyright = '© OpenStreetMap contributors';
 
-export function addCopyrightTextRaster(src: Buffer, width: number, height: number, font_dir: string = '/input/fonts', font: string = 'NotoSans-Regular.ttf', family: string = 'NotoSans'): Buffer {
+let fontsDirectory = process.env.FONT_DIRECTORY;
+if (fontsDirectory === undefined || fontsDirectory === '')
+    fontsDirectory = '/input/fonts';
+
+export function addCopyrightTextRaster(src: Buffer, width: number, height: number, font_dir: string = fontsDirectory, font: string = 'NotoSans-Regular.ttf', family: string = 'NotoSans'): Buffer {
     registerFont(path.join(font_dir, font), {family: family});
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
