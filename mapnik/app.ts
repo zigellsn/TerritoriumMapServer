@@ -195,8 +195,8 @@ amqp.connect(url, function (error0, connection) {
                 }
                 if (page !== undefined) {
                     if (page.mediaType === 'application/pdf')
-                        buildPdf(page, buffers, (_a, buffer, _b) => {
-                            let buffers: Array<ResultBuffer> = [{
+                        buildPdf(page, buffers, (buffer) => {
+                            let pdfDocument: Array<ResultBuffer> = [{
                                 fileName: `map_${dateString}_${timeString}.pdf`,
                                 buffer: buffer,
                                 message: '',
@@ -205,7 +205,7 @@ amqp.connect(url, function (error0, connection) {
                                 ppi: undefined,
                                 size: undefined
                             }]
-                            sendBuffer(dict, buffers, false, channel, sendQueue, msg);
+                            sendBuffer(dict, pdfDocument, false, channel, sendQueue, msg);
                         });
                     else {
                         //TODO: xhtml-Export

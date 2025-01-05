@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
-import {createLayers, getInline} from '../renderer/utils';
+import {addCopyrightTextVector, createLayers, getInline} from '../renderer/utils';
 import {mergeLayers} from '../renderer/utils';
 import {Territorium} from "../index";
 import {Renderer as MockRenderer} from "../renderer/mockRenderer";
+import {buildPdf} from "../renderer/container";
+import ResultBuffer = Territorium.ResultBuffer;
+import * as fs from "node:fs";
 
 let json = `
         {
@@ -156,6 +159,15 @@ let json = `
             }
         }`
 
+let page: Territorium.Page = {
+    'mediaType': 'application/pdf',
+    'pageSize': 'A4',
+    'ppi': 72.0,
+    'margins': [36.0, 36.0, 36.0, 36.0],
+    'orientation': 'portrait',
+    'pageDecoration': true
+};
+
 describe('testing mergeLayers', () => {
     let polygon: Territorium.Polygon = JSON.parse(json);
     test('empty string should result in zero', () => {
@@ -185,5 +197,46 @@ describe('testing mockRenderer', () => {
         let renderer = new MockRenderer();
         let result = renderer.map(polygon);
         expect(result).not.toStrictEqual('');
+    });
+});
+
+describe('testing buildPdf', () => {
+    test('empty string should result in zero', () => {
+        let images: Array<Territorium.ResultBuffer> = [];
+        let svgBuffer = Buffer.from(addCopyrightTextVector('<svg xmlns="http://www.w3.org/2000/svg" viewBox="-52 -53 100 100" stroke-width="2">\n' +
+            ' <g fill="none">\n' +
+            '  <ellipse stroke="#66899a" rx="6" ry="44"/>\n' +
+            '  <ellipse stroke="#e1d85d" rx="6" ry="44" transform="rotate(-66)"/>\n' +
+            '  <ellipse stroke="#80a3cf" rx="6" ry="44" transform="rotate(66)"/>\n' +
+            '  <circle  stroke="#4b541f" r="44"/>\n' +
+            ' </g>\n' +
+            ' <g fill="#66899a" stroke="white">\n' +
+            '  <circle fill="#80a3cf" r="13"/>\n' +
+            '  <circle cy="-44" r="9"/>\n' +
+            '  <circle cx="-40" cy="18" r="9"/>\n' +
+            '  <circle cx="40" cy="18" r="9"/>\n' +
+            ' </g>\n' +
+            '</svg>\n', 30, 30), 'utf-8');
+        images.push({
+            name: 'name', fileName: 'fileName', buffer: svgBuffer, message: '',
+            size: [100, 100], mediaType: 'image/svg+xml', ppi: 72.0
+        });
+        buildPdf(page, images, (buffer) => {
+            let pdfDocument: Array<ResultBuffer> = [{
+                fileName: `map_test.pdf`,
+                buffer: buffer,
+                message: '',
+                mediaType: 'application/pdf',
+                name: undefined,
+                ppi: undefined,
+                size: undefined
+            }];
+            expect(pdfDocument).not.toStrictEqual('');
+            fs.writeFile(pdfDocument[0].fileName, pdfDocument[0].buffer, err => {
+                if (err) {
+                    console.error(err);
+                }
+            });
+        });
     });
 });
