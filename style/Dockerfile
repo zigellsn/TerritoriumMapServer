@@ -12,11 +12,8 @@ RUN mkdir -p /output
 VOLUME ["/output"]
 WORKDIR $HOME/app
 
-COPY package.json .
 RUN npm install -g carto
-RUN npm install
 
 COPY scripts/create_carto.sh .
-COPY makestyle.js .
 
 CMD ["sh", "create_carto.sh"]

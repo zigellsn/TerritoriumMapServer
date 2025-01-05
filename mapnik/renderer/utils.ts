@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-import {createCanvas, Image} from "canvas";
+import {createCanvas, deregisterAllFonts, Image, registerFont} from "canvas";
 import * as turf from "@turf/turf";
 import {Territorium} from "../index";
+import * as path from "node:path";
 
 const copyright = '© OpenStreetMap contributors';
 
-export function addCopyrightTextRaster(src: Buffer, width: number, height: number): Buffer {
+export function addCopyrightTextRaster(src: Buffer, width: number, height: number, font_dir: string = '/input/fonts', font: string = 'NotoSans-Regular.ttf', family: string = 'NotoSans'): Buffer {
+    registerFont(path.join(font_dir, font), {family: family});
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
     const img = new Image();
@@ -29,10 +31,12 @@ export function addCopyrightTextRaster(src: Buffer, width: number, height: numbe
         throw err
     };
     img.src = src;
-    ctx.font = '10px DejaVu Sans Book';
+    ctx.font = `10px ${family}`;
     let text = ctx.measureText(copyright);
     ctx.fillText(copyright, 10, height - text.fontBoundingBoxAscent);
-    return canvas.toBuffer();
+    let buf = canvas.toBuffer();
+    deregisterAllFonts();
+    return buf;
 }
 
 export function addCopyrightTextVector(src: string, _width: number, height: number): string {
@@ -80,7 +84,7 @@ export function mergeLayers(layers: Array<Territorium.Layer>): Array<any> {
         const key = layer.styleName;
         if (!mergedLayers.has(key))
             if (layer.way.type === 'GeometryCollection') {
-                mergedLayers.set(key, [layer.way.geometries]);
+                mergedLayers.set(key, layer.way.geometries);
             } else {
                 mergedLayers.set(key, [layer.way]);
             }
@@ -96,7 +100,11 @@ export function mergeLayers(layers: Array<Territorium.Layer>): Array<any> {
     });
     const mergedLayersCollection: Map<String, any> = new Map();
     mergedLayers.forEach((value: Array<any>, new_key: String) => {
-        mergedLayersCollection.set(new_key, turf.geometryCollection(value).geometry);
+        mergedLayersCollection.set(new_key, {
+            way: turf.featureCollection([turf.geometryCollection(value)]),
+            name: new_key,
+            styleName: new_key
+        });
     });
     return Array.from(mergedLayersCollection.values());
 }

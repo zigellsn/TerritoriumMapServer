@@ -27,9 +27,6 @@ done
 echo "PostgreSQL started"
 
 psql -U "${PGUSER}" -d "${DBNAME}" -c 'CREATE EXTENSION IF NOT EXISTS hstore;'
-#if [ "${STYLE:-de}" = 'de' ]; then
-#  psql -U "${PGUSER}" -d "${DBNAME}" -c 'CREATE EXTENSION IF NOT EXISTS osml10n CASCADE;'
-#fi
 
 if [ "${STYLE:-de}" = 'de' ]; then
   python /usr/local/osml10n/bin/geo-transcript-srv.py -s &
@@ -48,9 +45,10 @@ if [ "${STYLE:-de}" = 'de' ]; then
     --verbose \
     --drop \
     --style /scripts/openstreetmap-carto-hstore-only-l10n.lua \
-    --prefix planet_osm_hstore \
+    --tag-transform-script /scripts/openstreetmap-carto.lua
     /input/"${OSM2PGSQL_DATAFILE}"
   /input/views_osmde/apply-views.sh "${DBNAME}"
+  psql -d osm -f /input/views_osmde/functions.sql
 else
   osm2pgsql -v \
     "${OSMHOST}" \

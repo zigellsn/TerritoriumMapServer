@@ -55,7 +55,7 @@ export class Renderer {
         for (const l of layers) {
             let ds = new mapnik.Datasource({
                 type: 'geojson',
-                inline: JSON.stringify(l)
+                inline: JSON.stringify(l.way)
             });
             let layer = new mapnik.Layer(`border${i}`, this.srs);
             layer.datasource = ds;
