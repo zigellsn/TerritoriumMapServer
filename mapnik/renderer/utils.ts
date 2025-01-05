@@ -33,7 +33,7 @@ export function addCopyrightTextRaster(src: Buffer, width: number, height: numbe
     img.src = src;
     ctx.font = `10px ${family}`;
     let text = ctx.measureText(copyright);
-    ctx.fillText(copyright, 10, height - text.fontBoundingBoxAscent);
+    ctx.fillText(copyright, 10, height - text.actualBoundingBoxAscent);
     let buf = canvas.toBuffer();
     deregisterAllFonts();
     return buf;
