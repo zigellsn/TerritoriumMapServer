@@ -1,4 +1,4 @@
-FROM docker.io/debian:bookworm-slim
+FROM docker.io/debian:trixie-slim
 
 ENV VERSION 1.2.1
 

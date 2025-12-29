@@ -25,6 +25,7 @@ while ! nc -z "${PGHOST}" "${PGPORT}"; do
 done
 
 echo "PostgreSQL started"
+echo "Using Database ${DBNAME}"
 
 psql -U "${PGUSER}" -d "${DBNAME}" -c 'CREATE EXTENSION IF NOT EXISTS hstore;'
 
@@ -44,11 +45,8 @@ if [ "${STYLE:-de}" = 'de' ]; then
     --slim \
     --verbose \
     --drop \
-    --style /scripts/openstreetmap-carto-hstore-only-l10n.lua \
-    --tag-transform-script /scripts/openstreetmap-carto.lua
+    --style /input/openstreetmap-carto-flex-l10n.lua \
     /input/"${OSM2PGSQL_DATAFILE}"
-  /input/views_osmde/apply-views.sh "${DBNAME}"
-  psql -d osm -f /input/views_osmde/functions.sql
 else
   osm2pgsql -v \
     "${OSMHOST}" \
@@ -65,3 +63,4 @@ else
     --tag-transform-script /input/openstreetmap-carto.lua \
     /input/"${OSM2PGSQL_DATAFILE}"
 fi
+psql -d osm -f /input/functions.sql

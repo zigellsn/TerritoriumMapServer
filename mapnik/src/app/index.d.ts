@@ -16,18 +16,21 @@
 export declare namespace Territorium {
 
     interface Page {
-        mediaType: 'application/pdf' | 'image/svg+xml' | 'application/xhtml+xml';
+        name: string | undefined;
+        mediaType: 'application/pdf' | 'image/svg+xml' | 'application/epub+zip';
         pageSize: 'A0' | 'A1' | 'A2' | 'A3' | 'A4' | 'A5' | 'A6' | 'A7' | 'A8' | 'A9' | 'A10'
             | 'B0' | 'B1' | 'B2' | 'B3' | 'B4' | 'B5' | 'B6' | 'B7' | 'B8' | 'B9' | 'B10'
-            | 'C0' | 'C1' | 'C2' | 'C3' | 'C4' | 'C5' | 'C6' | 'C7' | 'C8' | 'C9' | 'C10'
-            | '4A0' | '2A0'
-            | 'RA0' | 'RA1' | 'RA2' | 'RA3' | 'RA4'
-            | 'SRA0' | 'SRA1' | 'SRA2' | 'SRA3' | 'SRA4'
-            | 'EXECUTIVE' | 'FOLIO' | 'LEGAL' | 'LETTER' | 'TABLOID' | undefined;
-        ppi: number;
-        margins: number | [number, number] | [number, number, number, number];
-        orientation: 'portrait' | 'landscape';
-        pageDecoration: boolean;
+            | 'LETTER' | 'LEGAL' | 'TABLOID' | 'LEDGER'
+            | 'JUNIOR_LEGAL' | 'HALF_LETTER' | 'GOV_LETTER' | 'GOV_LEGAL'
+            | 'ANSI_A' | 'ANSI_B' | 'ANSI_C' | 'ANSI_D' | 'ANSI_E'
+            | 'ARCH_A' | 'ARCH_B' | 'ARCH_C' | 'ARCH_D' | 'ARCH_E' | 'ARCH_E1' | 'ARCH_E2' | 'ARCH_E3'
+            | 'POSTCARD' | 'EXECUTIVE'
+            | 'CUSTOM' | undefined;
+        physicalSize: [number, number] | undefined; // Only with pageSize = CUSTOM
+        ppi: number | undefined;
+        margins: number | [number, number] | [number, number, number, number] | undefined;
+        orientation: 'portrait' | 'landscape' | undefined;
+        pageDecoration: boolean | undefined;
     }
 
     interface PolygonName {
@@ -57,6 +60,7 @@ export declare namespace Territorium {
 
     interface SubPolygon {
         name: SubPolygonName;
+        projection: string | undefined;
         way: any;
         style: Style | undefined;
     }
@@ -66,43 +70,63 @@ export declare namespace Territorium {
         number: string;
         size: [number, number];
         bbox: [number, number, number, number];
+        projection: string | undefined;
         way: any;
-        mediaType: 'image/png' | 'image/svg+xml';
+        mediaType: 'image/png' | 'image/svg+xml' | 'application/pdf';
         style: Style | undefined;
         subpolygon: SubPolygon | Array<SubPolygon> | undefined;
+        generateWorldFile: boolean;
     }
 
-    interface JsonPolygon {
+    interface PolygonContainer {
         polygon: Polygon | Array<Polygon>;
         page: Page | undefined;
     }
 
     interface Layer {
+        projection: string | undefined;
         way: any;
         name: PolygonName | SubPolygonName;
-        styleName: string
+        styleName: string;
     }
 
     export interface Job {
         job: string;
-        payload: JsonPolygon;
+        payload: PolygonContainer | undefined;
+    }
+
+    interface JobResult {
+        job: string;
+        error: boolean;
+        result: Result | Array<Result>;
     }
 
     interface Result {
-        job: string;
         payload: string | Buffer;
+        worldFile: string | Buffer | undefined;
         filename: string | undefined;
         mediaType: string | undefined;
         error: boolean;
     }
 
     interface ResultBuffer {
-        name: string;
+        name: string | undefined;
         fileName: string;
-        buffer: Buffer;
+        buffer: string | Buffer;
+        worldFile: string | Buffer | undefined;
         message: string;
-        size: [number, number];
+        size: [number, number] | undefined;
         mediaType: string;
-        ppi: number;
+        ppi: number | undefined;
     }
+
+    interface Container {
+        page: Page;
+        buffers: Array<ResultBuffer>;
+        version: string;
+    }
+}
+
+interface AbstractRenderer {
+    map(polygon: Territorium.Polygon): Promise<{ map: string | Buffer<ArrayBufferLike>, worldFile: Buffer }>;
 }

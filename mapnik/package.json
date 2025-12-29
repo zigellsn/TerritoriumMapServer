@@ -2,31 +2,21 @@
   "name": "territoriummaprenderer",
   "version": "0.1.0-alpha01",
   "private": true,
-  "scripts": {
-    "start": "node app.js",
-    "build": "tsc -p .",
-    "test": "jest"
-  },
+  "type": "module",
   "devDependencies": {
-    "@types/amqplib": "^0.10.6",
-    "@types/mapnik": "^3.0.6",
-    "@types/pdfmake": "^0.2.11",
-    "@types/node": "^22.10.5",
-    "@types/luxon": "^3.4.2",
-    "@types/jest": "^29.5.14",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.7.2",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.2.5"
+    "@types/amqplib": "^0.10.8",
+    "@types/luxon": "^3.7.1",
+    "@types/node": "^25.0.3",
+    "typescript": "^5.9.3",
+    "@types/bun": "latest"
   },
   "dependencies": {
-    "amqplib": "^0.10.5",
-    "canvas": "^3.0.1",
-    "@mapnik/mapnik": "^4.6.6",
-    "@turf/turf": "^7.2.0",
-    "@turf/centroid": "^7.2.0",
-    "pdfmake": "^0.3.0-beta.15",
-    "luxon": "^3.5.0",
-    "uuid": "^11.0.3"
+    "@turf/centroid": "^7.3.1",
+    "@turf/turf": "^7.3.1",
+    "amqplib": "^0.10.9",
+    "luxon": "^3.7.2",
+    "poolifier-web-worker": "^0.5.15",
+    "sharp": "^0.34.5",
+    "uuid": "^13.0.0"
   }
 }

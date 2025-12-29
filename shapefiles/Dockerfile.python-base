@@ -1,6 +1,6 @@
-FROM docker.io/python:3.13.0-slim
+FROM docker.io/python:3.14.0-slim
 
-ENV HOME /home/pyuser 
+ENV HOME /home/pyuser
 RUN useradd --create-home pyuser
 WORKDIR $HOME
 

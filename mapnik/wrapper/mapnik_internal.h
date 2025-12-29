@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-export class RenderError extends Error {
+#pragma once
 
-    constructor(public message: string) {
-        super(message);
-        this.name = 'RenderError';
-        this.stack = (<any>new Error()).stack;
-    }
+#ifdef __cplusplus
+extern "C" {
+#endif
+    void _set_last_error(const char *msg);
+#ifdef __cplusplus
 }
+#endif

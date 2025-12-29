@@ -1,20 +1,24 @@
-FROM docker.io/debian:bookworm-slim
+FROM docker.io/debian:trixie-slim
 
-ENV VERSION 1.2.1
+ENV VERSION 1.3.0
 
-RUN echo "deb http://deb.debian.org/debian bookworm-backports main contrib non-free non-free-firmware" >> /etc/apt/sources.list \
+RUN echo "deb http://deb.debian.org/debian trixie-backports main contrib non-free non-free-firmware" >> /etc/apt/sources.list \
+    && apt-get update \
+    && apt-get install --no-install-recommends -y curl gpg ca-certificates \
+    && curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /etc/apt/keyrings/postgres.pgp \
+    && echo "deb [signed-by=/etc/apt/keyrings/postgres.pgp] http://apt.postgresql.org/pub/repos/apt/ trixie-pgdg main" >> /etc/apt/sources.list.d/pgdg.list \
+    && apt-get purge -y --auto-remove curl gpg \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
-    osm2pgsql/bookworm-backports \
+    osm2pgsql/trixie-backports \
     netcat-openbsd \
-    postgresql-15 \
+    postgresql-18 \
     libunac1 \
-    libicu72 \
+    libicu76 \
     lua5.3 \
     lua-socket \
     python3 \
     python3-venv \
-    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 RUN set -ex \
@@ -36,8 +40,6 @@ RUN set -ex \
     && wget https://github.com/giggls/osml10n/archive/refs/tags/v${VERSION}.tar.gz \
     && tar -xvf v${VERSION}.tar.gz \
     && cd /build/osml10n-${VERSION} \
-    && mkdir -p /scripts \
-    && cp openstreetmap-carto-hstore-only-l10n.lua /scripts \
     && make deb \
     && cd lua_unac \
     && make deb \
@@ -55,8 +57,8 @@ ENV PATH="$VENV/bin:$PATH"
 RUN mkdir -p /input
 VOLUME ["/input"]
 
-COPY scripts/docker-entrypoint.sh /usr/local/bin/
+COPY scripts/entrypoint.sh /usr/local/bin/
 
-ENTRYPOINT ["sh", "/usr/local/bin/docker-entrypoint.sh"]
+ENTRYPOINT ["sh", "/usr/local/bin/entrypoint.sh"]
 
 CMD ["osm2pgsql"]

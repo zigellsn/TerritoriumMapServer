@@ -14,9 +14,20 @@
  * limitations under the License.
  */
 
-module.exports = {
-    transform: {'^.+\\.ts?$': 'ts-jest'},
-    testEnvironment: 'node',
-    testRegex: '/tests/.*\\.(test|spec)?\\.(ts|tsx)$',
-    moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node']
-};
+#ifndef MAPNIK_WRAPPER_H
+#define MAPNIK_WRAPPER_H
+
+#include <stdint.h>
+#include <stdbool.h>
+
+#define EXPORT __attribute__((visibility("default")))
+#ifdef __cplusplus
+extern "C" {
+#endif
+    EXPORT const char* last_error(void);
+    EXPORT void last_error_clear(void);
+    EXPORT int32_t version(void);
+#ifdef __cplusplus
+}
+#endif
+#endif //MAPNIK_WRAPPER_H

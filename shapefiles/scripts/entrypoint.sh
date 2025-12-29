@@ -138,11 +138,11 @@ TMPDIR=$(mktemp -d -t get-fonts.XXXXXXXXX)
 trap "rm -rf ${TMPDIR} ${FONTDIR}/static" EXIT
 
 # Noto Emoji B&W isn't available as a separate download, so we need to download the package and unzip it
-curl --fail -A "get-fonts.sh/osm-carto" -o "${TMPDIR}/Noto_Emoji.zip" -L 'https://fonts.google.com/download?family=Noto%20Emoji'
-
-unzip -oqq "${TMPDIR}/Noto_Emoji.zip" static/NotoEmoji-Regular.ttf static/NotoEmoji-Bold.ttf -d "${FONTDIR}"
-mv "${FONTDIR}/static/NotoEmoji-Regular.ttf" "${FONTDIR}"
-mv "${FONTDIR}/static/NotoEmoji-Bold.ttf" "${FONTDIR}"
+#curl --fail -A "get-fonts.sh/osm-carto" -o "${TMPDIR}/Noto_Emoji.zip" -L 'https://fonts.google.com/download?family=Noto%20Emoji'
+#
+#unzip -oqq "${TMPDIR}/Noto_Emoji.zip" static/NotoEmoji-Regular.ttf static/NotoEmoji-Bold.ttf -d "${FONTDIR}"
+#mv "${FONTDIR}/static/NotoEmoji-Regular.ttf" "${FONTDIR}"
+#mv "${FONTDIR}/static/NotoEmoji-Bold.ttf" "${FONTDIR}"
 
 curl --fail -A "get-fonts.sh/osm-carto" -o "${TMPDIR}/hanazono.zip" -L 'https://mirrors.dotsrc.org/osdn/hanazono-font/68253/hanazono-20170904.zip'
 

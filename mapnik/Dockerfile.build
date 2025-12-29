@@ -1,14 +1,33 @@
-FROM docker.io/node:22-bookworm-slim
+FROM docker.io/node:24-trixie-slim
 
-ENV MAPNIK 4.0.3
+ENV MAPNIK 4.1.4
 ENV MAPBOX_GEOMETRY 2.0.3
 ENV MAPBOX_POLY 2.0.1
 
 RUN apt-get update \
+  && apt-get install --no-install-recommends -y curl gpg ca-certificates \
+  && curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /etc/apt/keyrings/postgres.pgp \
+  && echo "deb [signed-by=/etc/apt/keyrings/postgres.pgp] https://apt.postgresql.org/pub/repos/apt/ trixie-pgdg main" >> /etc/apt/sources.list.d/pgdg.list \
+  && apt-get purge -y --auto-remove curl gpg \
+  && apt-get update \
   && apt-get install -y --no-install-recommends \
-  postgresql-client-15 \
+  postgresql-client-18 \
   netcat-openbsd \
-  python3 \
+  libboost-regex1.83.0 \
+  libboost-program-options1.83.0 \
+  libboost-url1.83.0 \
+  libboost-context1.83.0 \
+  libharfbuzz-bin \
+  libproj25 \
+  libicu76 \
+  libjpeg62-turbo \
+  libwebp7 \
+  libcairo2 \
+  libtiff6 \
+  libsqlite3-0 \
+  libgdal36 \
+  libpq5 \
+  wget \
   && rm -rf /var/lib/apt/lists/*
 
 RUN set -ex \
@@ -18,10 +37,13 @@ RUN set -ex \
   wget \
   bzip2 \
   clang \
+  g++ \
   libharfbuzz-dev \
   libcairo2-dev \
   libboost-regex-dev \
   libboost-program-options-dev \
+  libboost-url-dev \
+  libboost-context-dev \
   libproj-dev \
   libicu-dev \
   libjpeg-dev \
@@ -44,7 +66,7 @@ RUN set -ex \
   && wget https://github.com/mapnik/mapnik/releases/download/v${MAPNIK}/mapnik-v${MAPNIK}.tar.bz2 \
   && tar -xvf mapnik-v${MAPNIK}.tar.bz2 \
   && cd mapnik-v${MAPNIK} \
-  && python3 ./scons/scons.py configure \
+  && python3 ./scons/scons.py CUSTOM_DEFINES="-DBOOST_PHOENIX_STL_TUPLE_H_" configure \
   && python3 ./scons/scons.py install -j8 \
   && rm -rf /build \
   && apt-get purge -y --auto-remove $buildDeps \
@@ -64,12 +86,12 @@ COPY . .
 
 RUN chown -R $NODE_USER $HOME/app
 
-USER $NODE_USER
+# USER $NODE_USER
 
-RUN npm install
+RUN pnpm install
 
-RUN npm run build
+RUN pnpm run build
 
 EXPOSE 5000
 
-ENTRYPOINT ["./scripts/docker-entrypoint.sh"]
+ENTRYPOINT ["./scripts/entrypoint.sh"]

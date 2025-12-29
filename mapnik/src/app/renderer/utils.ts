@@ -14,38 +14,46 @@
  * limitations under the License.
  */
 
-import {createCanvas, deregisterAllFonts, Image, registerFont} from "canvas";
 import * as turf from "@turf/turf";
-import {Territorium} from "../index";
-import * as path from "node:path";
+import type {Territorium} from "../index.d.ts";
+import sharp from "sharp";
 
-const copyright = '© OpenStreetMap contributors';
+const COPYRIGHT_TEXT = '© OpenStreetMap contributors';
 
 let fontsDirectory = process.env.FONT_DIRECTORY;
 if (fontsDirectory === undefined || fontsDirectory === '')
     fontsDirectory = '/input/fonts';
 
-export function addCopyrightTextRaster(src: Buffer, width: number, height: number, font_dir: string = fontsDirectory, font: string = 'NotoSans-Regular.ttf', family: string = 'NotoSans'): Buffer {
-    registerFont(path.join(font_dir, font), {family: family});
-    const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
-    img.onload = () => ctx.drawImage(img, 0, 0);
-    img.onerror = err => {
-        throw err
-    };
-    img.src = src;
-    ctx.font = `10px ${family}`;
-    let text = ctx.measureText(copyright);
-    ctx.fillText(copyright, 10, height - text.actualBoundingBoxAscent);
-    let buf = canvas.toBuffer();
-    deregisterAllFonts();
-    return buf;
+export async function addCopyrightTextRaster(src: string | Buffer<ArrayBufferLike>, width: number, height: number, font_dir: string = fontsDirectory!, font: string = 'NotoSans-Regular.ttf', family: string = 'NotoSans'): Promise<Buffer> {
+    const fontSize = 8;
+    const margin = 10;
+
+    const svgOverlay = Buffer.from(`
+        <svg width="${width}" height="${height}">
+            <style>
+                .attr { 
+                    fill: rgba(0, 0, 0, 0.6); 
+                    font-family: ${family}; 
+                    font-size: ${fontSize} px; 
+                    font-weight: bold;
+                }
+                .bg {
+                    fill: rgba(255, 255, 255, 0.4);
+                }
+            </style>
+            <text x="${margin}" y="${height - margin}" class="attr">${COPYRIGHT_TEXT}</text>
+        </svg>
+    `);
+
+    return sharp(src)
+        .composite([{ input: svgOverlay, top: 0, left: 0 }])
+        .png()
+        .toBuffer();
 }
 
-export function addCopyrightTextVector(src: string, _width: number, height: number): string {
+export function addCopyrightTextVector(src: string | Buffer<ArrayBufferLike>, _width: number, height: number): string {
     let len = src.length;
-    return `${src.slice(0, len - 7)}<text fill="#0" font-size="10" font-family="sans-serif" x="10" y="${height - 24}"><tspan dy="18.2" x="10">${copyright}</tspan></text>${src.slice(len - 7, len)}`;
+    return `${src.slice(0, len - 7)}<text fill="#0" font-size="10" font-family="sans-serif" x="10" y="${height - 24}"><tspan dy="18.2" x="10">${COPYRIGHT_TEXT}</tspan></text>${src.slice(len - 7, len)}`;
 }
 
 export function createLayers(polygon: Territorium.Polygon): Array<Territorium.Layer> {
@@ -59,9 +67,10 @@ export function createLayers(polygon: Territorium.Polygon): Array<Territorium.La
         }
     }
     if (polygon.way !== undefined) {
-        layers.push({way: polygon.way, name: polygon.name, styleName: globalStyle});
+        layers.push({way: polygon.way, projection: polygon.projection, name: polygon.name, styleName: globalStyle});
     }
-    if (polygon.subpolygon !== undefined) {
+
+    if (polygon.subpolygon !== null && polygon.subpolygon !== undefined) {
 
         let subPolygons: Array<Territorium.SubPolygon> = []
         if (polygon.subpolygon instanceof Array)
@@ -75,7 +84,7 @@ export function createLayers(polygon: Territorium.Polygon): Array<Territorium.La
                 if (layer.style !== undefined && layer.style.name !== undefined) {
                     style = layer.style.name;
                 }
-                layers.push({way: layer.way, name: layer.name, styleName: style});
+                layers.push({way: layer.way, projection: polygon.projection, name: layer.name, styleName: style});
             }
         }
     }
@@ -95,10 +104,12 @@ export function mergeLayers(layers: Array<Territorium.Layer>): Array<any> {
         else {
             if (layer.way.type === 'GeometryCollection') {
                 for (const geometry of layer.way.geometries) {
-                    mergedLayers.get(key).push(geometry);
+                    if (mergedLayers.get(key) !== undefined)
+                        mergedLayers.get(key)!.push(geometry);
                 }
             } else {
-                mergedLayers.get(key).push(layer.way);
+                if (mergedLayers.get(key) !== undefined)
+                    mergedLayers.get(key)!.push(layer.way);
             }
         }
     });
@@ -117,7 +128,7 @@ export function createUniqueStyles(polygon: Territorium.Polygon): Array<Territor
     let styles: Array<Territorium.Style> = [];
     if (polygon.style !== undefined)
         styles.push(polygon.style);
-    if (polygon.subpolygon !== undefined) {
+    if (polygon.subpolygon !== undefined && polygon.subpolygon !== null) {
 
         let subPolygons: Array<Territorium.SubPolygon> = []
         if (polygon.subpolygon instanceof Array)
@@ -133,11 +144,16 @@ export function createUniqueStyles(polygon: Territorium.Polygon): Array<Territor
     return getUnique(styles, 'name');
 }
 
-function getUnique(arr: Array<Territorium.Style>, comp: string): Array<Territorium.Style> {
-    return arr
-        .map(e => e[comp])
-        .map((e, i, final) => final.indexOf(e) === i && i)
-        .filter(e => arr[e]).map(e => arr[e]);
+function getUnique(arr: Array<Territorium.Style>, comp: keyof Territorium.Style): Array<Territorium.Style> {
+    const seen = new Set();
+    return arr.filter(item => {
+        const val = item[comp];
+        if (seen.has(val)) {
+            return false;
+        }
+        seen.add(val);
+        return true;
+    });
 }
 
 export function createStyles(styles: Array<Territorium.Style>): string {
@@ -169,9 +185,9 @@ export function createTextStyle(polygon: Territorium.Polygon): string {
 
     if (polygon.name.size !== undefined)
         textSize = polygon.name.size
-    if (polygon.name.size !== undefined)
+    if (polygon.name.fontName !== undefined)
         fontName = polygon.name.fontName
-    if (polygon.name.size !== undefined)
+    if (polygon.name.color !== undefined)
         fontColor = polygon.name.color
 
     s += '<Style name="names_style">';
@@ -187,11 +203,11 @@ export function getInline(layers: Array<Territorium.Layer>): string {
     for (const layer of layers) {
         if (layer.name === undefined)
             continue;
-        if (layer.name.visible === undefined || layer.name.visible === false) {
+        if (layer.name.visible === undefined || !layer.name.visible) {
             continue;
         }
         if (layer.name.text !== undefined) {
-            if (layer.name.position !== undefined)
+            if (layer.name.position !== undefined && layer.name.position !== null)
                 nameString += `"${layer.name.text}",${layer.name.position[0]},${layer.name.position[1]}\n`;
             else {
                 if (layer.way !== undefined) {
@@ -202,4 +218,23 @@ export function getInline(layers: Array<Territorium.Layer>): string {
         }
     }
     return nameString;
+}
+
+export function generateWorldFile(bbox: number[], m_width: number, m_height: number): Buffer<ArrayBufferLike> {
+    if (bbox === undefined || bbox.length !== 4)
+        throw new Error('bbox must be an array of length 4');
+
+    const pixel_x_size = (bbox[2]! - bbox[0]!) / m_width;
+    const pixel_y_size = (bbox[3]! - bbox[1]!) / m_height;
+    const left_pixel_center_x = bbox[0]! + pixel_x_size * 0.5;
+    const top_pixel_center_y = bbox[3]! - pixel_y_size * 0.5;
+
+    return Buffer.from([
+        pixel_x_size,
+        0.0,
+        0.0,
+        -pixel_y_size,
+        left_pixel_center_x,
+        top_pixel_center_y
+    ].map(n => n.toFixed(8)).join('\n') + '\n', 'utf-8');
 }
