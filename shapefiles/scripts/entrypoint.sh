@@ -10,7 +10,7 @@ done
 
 echo "PostgreSQL started"
 
-python /output/get-external-data.py -f -c /output/external-data.yml
+uv run /output/get-external-data.py -f -c /output/external-data.yml
 
 FONTDIR="/output/fonts"
 
