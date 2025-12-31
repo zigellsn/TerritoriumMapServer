@@ -1,18 +1,18 @@
-FROM docker.io/node:24-trixie-slim
+FROM docker.io/oven/bun:1-slim
 
 RUN apt-get update && apt-get install -y \
   wget \
   ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-ENV NODE_USER node
-ENV HOME /home/$NODE_USER
+ENV USER bun
+ENV HOME /home/$BUN
 
 RUN mkdir -p /output
 VOLUME ["/output"]
 WORKDIR $HOME/app
 
-RUN npm install -g carto
+RUN bun install carto
 
 COPY scripts/create_carto.sh .
 
