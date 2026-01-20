@@ -21,7 +21,7 @@ import type {AbstractRenderer, Territorium} from "./index.d.ts";
 import * as fs from 'node:fs';
 import {Renderer} from "./renderer/renderer.ts";
 import {Renderer as MockRenderer} from './renderer/mockRenderer.ts';
-import {DateTime} from "luxon";
+import {Temporal} from '@js-temporal/polyfill';
 import {buildPdf} from "./renderer/container.ts";
 import * as path from "node:path";
 
@@ -63,9 +63,9 @@ class RendererWorker extends ThreadWorker<Inputs, Territorium.JobResult | undefi
         }
 
         let buffers: Array<Territorium.ResultBuffer> = [];
-        let date = DateTime.local()
-        let dateString = date.toFormat('yyyyMMdd');
-        let timeString = date.toFormat('HHmmss');
+        let dateTime = Temporal.Now.plainDateTimeISO();
+        let dateString = `${dateTime.year}${String(dateTime.month).padStart(2, '0')}${String(dateTime.day).padStart(2, '0')}`;
+        let timeString = `${String(dateTime.hour).padStart(2, '0')}${String(dateTime.minute).padStart(2, '0')}${String(dateTime.second).padStart(2, '0')}`;
 
         let page: Territorium.Page | undefined = undefined;
         let extension: string | undefined = undefined;
