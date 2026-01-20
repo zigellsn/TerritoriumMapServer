@@ -1,0 +1,10 @@
+[project]
+name = "TMSShapefiles"
+version = "0.1.0-alpha01"
+description = "Territorium Map Server - Get Shapefiles and Fonts"
+requires-python = ">=3.14"
+dependencies = [
+    "requests==2.32.5",
+    "psycopg2-binary==2.9.11",
+    "pyYAML==6.0.3"
+]
